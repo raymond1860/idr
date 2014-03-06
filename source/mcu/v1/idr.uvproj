@@ -371,6 +371,11 @@
               <FileType>1</FileType>
               <FilePath>.\SPI.C</FilePath>
             </File>
+            <File>
+              <FileName>uart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\uart.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -390,6 +395,11 @@
               <FileName>spi.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\spi.h</FilePath>
+            </File>
+            <File>
+              <FileName>common.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\common.h</FilePath>
             </File>
           </Files>
         </Group>

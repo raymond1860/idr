@@ -4,17 +4,192 @@
 <h1>µVision Build Log</h1>
 <h2>Project:</h2>
 E:\projects\xh\idr\source\mcu\v1\idr.uvproj
-Project File Date:  02/26/2014
+Project File Date:  03/05/2014
 
 <h2>Output:</h2>
+compiling uart.c...
+COMMON.H(27): error C129: missing ';' before 'unsigned'
+uart.c(84): error C307: macro 'INC_PTR': parameter count mismatch
+uart.c - 2 Error(s), 0 Warning(s).
+compiling uart.c...
+UART.C(73): error C202: '__last_char': undefined identifier
+UART.C(74): error C202: '__last_char': undefined identifier
+UART.C(84): error C141: syntax error near ')'
+uart.c(84): error C307: macro 'INC_PTR': parameter count mismatch
+UART.C(91): error C231: 'uart2_init': redefinition
+UART.C(97): error C231: 'uart2_init': redefinition
+uart.c - 6 Error(s), 0 Warning(s).
+compiling uart.c...
+UART.C(73): error C202: '__last_char': undefined identifier
+UART.C(74): error C202: '__last_char': undefined identifier
+UART.C(91): error C231: 'uart2_init': redefinition
+UART.C(97): error C231: 'uart2_init': redefinition
+uart.c - 4 Error(s), 0 Warning(s).
+compiling uart.c...
+uart.c - 0 Error(s), 0 Warning(s).
+compiling uart.c...
+uart.c - 0 Error(s), 0 Warning(s).
+compiling uart.c...
+uart.c - 0 Error(s), 0 Warning(s).
 Build target 'idr'
 assembling STARTUP.A51...
 compiling main.c...
 compiling secure.c...
 compiling SPI.C...
 linking...
-Program Size: data=184.0 xdata=0 code=1078
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_INIT?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART1_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_READ?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_INIT?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART2_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_READ?UART
+Program Size: data=194.2 xdata=512 code=1538
 creating hex file from "idr"...
-"idr" - 0 Error(s), 0 Warning(s).
+"idr" - 0 Error(s), 6 Warning(s).
+Build target 'idr'
+compiling uart.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_INIT?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART1_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_READ?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_INIT?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART2_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_READ?UART
+Program Size: data=194.2 xdata=512 code=1538
+creating hex file from "idr"...
+"idr" - 0 Error(s), 6 Warning(s).
+Build target 'idr'
+assembling STARTUP.A51...
+compiling main.c...
+MAIN.C(37): warning C206: 'initial_serial': missing function-prototype
+compiling secure.c...
+compiling SPI.C...
+compiling uart.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_INIT?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART1_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_READ?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_INIT?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART2_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_READ?UART
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  INITIAL_SERIAL
+    MODULE:  main.obj (MAIN)
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  INITIAL_SERIAL
+    MODULE:  main.obj (MAIN)
+    ADDRESS: 0203H
+Program Size: data=192.2 xdata=512 code=1512
+creating hex file from "idr"...
+"idr" - 0 Error(s), 9 Warning(s).
+Build target 'idr'
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_INIT?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART1_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_READ?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_INIT?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART2_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_READ?UART
+*** WARNING L1: UNRESOLVED EXTERNAL SYMBOL
+    SYMBOL:  INITIAL_SERIAL
+    MODULE:  main.obj (MAIN)
+*** WARNING L2: REFERENCE MADE TO UNRESOLVED EXTERNAL
+    SYMBOL:  INITIAL_SERIAL
+    MODULE:  main.obj (MAIN)
+    ADDRESS: 0203H
+Program Size: data=192.2 xdata=512 code=1512
+creating hex file from "idr"...
+"idr" - 0 Error(s), 8 Warning(s).
+Build target 'idr'
+compiling main.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART1_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_READ?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART2_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_READ?UART
+Program Size: data=192.2 xdata=512 code=1515
+creating hex file from "idr"...
+"idr" - 0 Error(s), 4 Warning(s).
+Build target 'idr'
+assembling STARTUP.A51...
+compiling main.c...
+compiling secure.c...
+compiling SPI.C...
+compiling uart.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART1_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_READ?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART2_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_READ?UART
+Program Size: data=192.2 xdata=512 code=1515
+creating hex file from "idr"...
+"idr" - 0 Error(s), 4 Warning(s).
+Build target 'idr'
+compiling main.c...
+compiling secure.c...
+compiling SPI.C...
+compiling uart.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART1_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_READ?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART2_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_READ?UART
+Program Size: data=192.2 xdata=512 code=1495
+creating hex file from "idr"...
+"idr" - 0 Error(s), 4 Warning(s).
+Build target 'idr'
+assembling STARTUP.A51...
+compiling main.c...
+compiling secure.c...
+compiling SPI.C...
+compiling uart.c...
+linking...
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART1_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART1_READ?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_UART2_WRITE?UART
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART2_READ?UART
+Program Size: data=192.2 xdata=512 code=1495
+creating hex file from "idr"...
+"idr" - 0 Error(s), 4 Warning(s).
 Clean started: Project: 'idr'
    deleting intermediate output files for target 'idr'
