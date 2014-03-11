@@ -17,4 +17,11 @@ typedef struct st_general_packet{
 
 int packet_protocol(GenPacket* p);
 
+//Vendor private definition
+#define CMD_CLASS_COMM  	0x30
+#define CMD_CLASS_READER	0x31
+#define CMD_CLASS_CARD		0x32
+#define CMD_CLASS_EXT		0x33
+
+
 #endif
