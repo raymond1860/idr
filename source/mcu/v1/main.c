@@ -4,6 +4,7 @@
 #include "secure.h"
 #include "common.h"
 #include "packet.h"
+#include "thm3060.h"
 
 #define MAX_BUFSIZE 160
 
@@ -90,6 +91,11 @@ void main()
   	}  	 
 }
 
+void THM_ChangeProtBaud(unsigned char prot, unsigned char sndbaud, unsigned char rcvbaud)
+{
+    write_reg( PSEL, prot | sndbaud | rcvbaud );
+}    
+
 
 void SAM_packet_handler(uint8* buf,int size){
 	unsigned char len;
@@ -129,9 +135,29 @@ void SAM_packet_handler(uint8* buf,int size){
 }
 
 void PRIVATE_packet_handler(uint8* buf,int size){
-	if(buf){
-	}
-	if(size){
+	uint8* cmd_buf = buf+3;	//just skip prefix
+	switch(cmd_buf[0]){
+		case CMD_CLASS_COMM:{
+			//FIXME
+		}break;
+		case CMD_CLASS_READER: {
+			//FIXME
+		}break;
+		case CMD_CLASS_CARD: {
+			switch(cmd_buf[1]){
+				case 0x41: {
+					/* card cmd: activate non contact card
+					 * FMT: |CLASS[1]|CMD[1]|DELAY[2](0->no wait,0xffff->always wait)|
+					 * ANSWER:|STATUS_CODE[2]|TYPE[1](0x0A->Type A,0x0B Type B)|UID[4]|
+					*/
+					uint16 delaytime_ms = (cmd_buf[2]<<8)+cmd_buf[3];
+				}break;
+			}	
+		}break;
+		case CMD_CLASS_EXT: {
+			//FIXME
+		}break;
+
 	}
 }
 

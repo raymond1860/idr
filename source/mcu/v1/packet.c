@@ -1,3 +1,4 @@
+#include <string.h>
 #include "common.h"
 #include "packet.h"
 /*
@@ -55,4 +56,16 @@ int packet_protocol(GenPacket* p){
 		//should we check all fields?
 		return PPROT_SAM;
 	}
+}
+
+int setup_vendor_packet(uint8* pbuf,uint16 max_plen,uint8* payload,uint16 payload_len){	
+	if(max_plen<(payload_len+5))
+		return PERR_MEM;
+	pbuf[0] = VENDOR_PACKET_PREFIX;
+	pbuf[1] = (payload_len&0xff00)>>8;
+	pbuf[2] =  payload_len&0xff;
+	memcpy(pbuf+3,payload,payload_len);
+	pbuf[3+payload_len] = checksum(payload,payload_len);
+	pbuf[4+payload_len] = VENDOR_PACKET_SUFFIX;
+	return (payload_len+5);
 }

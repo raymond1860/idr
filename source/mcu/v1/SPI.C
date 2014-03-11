@@ -23,6 +23,7 @@
 #include <intrins.h>
 #include "STC15F2K08S2.h"
 #include "spi.h"
+#include "thm3060.h"
 
 
 // 此处用户可以根据自己应用进行修改
@@ -41,27 +42,6 @@
 //no POR on idr board
 //#define POR        P1_5	   
 #define STANDBY		P37
-
-// THM3060 寄存器地址
-#define DATA       0
-#define PSEL	   1
-#define FCONB	   2
-#define EGT		   3
-#define CRCSEL	   4
-#define RSTAT	   5
-#define SCON_60	   6
-#define INTCON	   7
-#define RSCH       8
-#define RSCL	   9
-#define CRCH	   0X0A
-#define CRCL	   0X0B
-#define TMRH	   0X0C
-#define TMRL	   0X0D
-#define BPOS	   0X0E
-#define SMOD	   0X10
-#define PWTH	   0X11
-
-
 
 
 //SPI 模式芯片复位

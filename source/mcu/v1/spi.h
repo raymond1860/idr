@@ -1,7 +1,5 @@
 #ifndef __SPI_H__
 #define __SPI_H__   
-#define CRCSEL	   4
-#define TMRL	   0X0D
 	extern unsigned short FWT;
 	extern unsigned char read_reg(unsigned char address);
 	extern void write_reg(unsigned char address,unsigned char content);
