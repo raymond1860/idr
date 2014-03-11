@@ -18,16 +18,24 @@ typedef unsigned int  uint32;
 
 //UART1 is for HOST&MCU
 void uart1_init(void);
-void uart1_write(char c);
+void uart1_writechar(char c);
+void uart1_write(const char* buf,int size);
+
 //return read char count
-char uart1_read();
+int uart1_read(char* buf,int max_size);
+//read single char ,block operation
+char uart1_readchar();
 
 
 //UART2 is for SAM&MCU
 void uart2_init(void);
-void uart2_write(char c);
+void uart2_writechar(char c);
+void uart2_write(const char* buf,int size);
+
 //return read char count
-char uart2_read();
+char uart2_readchar(void);
+//return read char count
+int uart2_read(char* buf,int max_size);
 
 
 #endif

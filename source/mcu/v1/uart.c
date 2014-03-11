@@ -62,7 +62,7 @@ static void serial_interrupt(void) interrupt 4  using 1
   
 }
 
-void uart1_write(char c){
+void uart1_writechar(char c){
 	uint8 temp;
 	temp = uart1_write_in;
 	INC_PTR(temp,SND_BUF_SIZE);	
@@ -77,14 +77,31 @@ void uart1_write(char c){
 	}
 }
 
-char uart1_read(){
+void uart1_write(const char* buf,int size){
+	int i=0;
+	while(i < size){
+		uart1_writechar(buf[i++]);
+	}
+}
+char uart1_readchar(){
 	char c;
 	while(uart1_read_in == uart1_read_out) ;
     c = uart1_read_buf[uart1_read_out];
     INC_PTR(uart1_read_out,RCV_BUF_SIZE);
 	return(c);
-
 }
+//return read char count
+int uart1_read(char* buf,int max_size){
+	int ret=0;
+	if(uart1_read_in != uart1_read_out) {
+		do {
+			buf[ret++]=uart1_read_buf[uart1_read_out];
+			INC_PTR(uart1_read_out,RCV_BUF_SIZE);			
+		}while((ret<max_size)&&uart1_read_in != uart1_read_out);
+	}
+	return ret;
+}
+
 
 
 static unsigned char xdata  uart2_read_buf[RCV_BUF_SIZE];
@@ -142,7 +159,7 @@ static void serial2_interrupt(void) interrupt 8  using 1
   
 }
 
-void uart2_write(char c){
+void uart2_writechar(char c){
 	uint8 temp;
 	temp = uart2_write_in;
 	INC_PTR(temp,SND_BUF_SIZE);	
@@ -157,13 +174,30 @@ void uart2_write(char c){
 	}
 }
 
-char uart2_read(){
+void uart2_write(const char* buf,int size){
+	int i=0;
+	while(i < size){
+		uart2_writechar(buf[i++]);
+	}
+}
+
+char uart2_readchar(){
 	char c;
 	while(uart2_read_in == uart2_read_out) ;
     c = uart2_read_buf[uart2_read_out];
     INC_PTR(uart2_read_out,RCV_BUF_SIZE);
 	return(c);
+}
+int uart2_read(char* buf,int max_size){
+	int ret=0;
+	if(uart2_read_in != uart2_read_out) {
+		do {
+			buf[ret++]=uart2_read_buf[uart2_read_out];
+			INC_PTR(uart2_read_out,RCV_BUF_SIZE);			
+		}while((ret<max_size)&&uart2_read_in != uart2_read_out);
 
+	}
+	return ret;
 }
 
 

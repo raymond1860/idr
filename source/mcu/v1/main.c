@@ -3,7 +3,26 @@
 #include "spi.h"
 #include "secure.h"
 #include "common.h"
+#include "packet.h"
 
+#define MAX_BUFSIZE 160
+
+void SAM_packet_handler(uint8* buf,int size);
+void PRIVATE_packet_handler(uint8* buf,int size);
+void Delay1ms(void)		//@13.56MHz
+{
+	unsigned char i, j;
+
+	i = 14;
+	j = 45;
+	do
+	{
+		while (--j);
+	} while (--i);
+}
+void DelayMs(int ms){
+	while(ms-->0) Delay1ms();
+}
 /*
  * idr work flow
  *			  HOST(PC-like uart terminal)
@@ -27,11 +46,13 @@
 
 
 //main function  
+
 void main()
 {
 	unsigned char idata buf[160];
 	unsigned char len; 	
-	unsigned char i;
+	unsigned char prot;
+	GenPacket p;
 	init_i2c();
 	uart1_init();
 	uart2_init();
@@ -42,23 +63,42 @@ void main()
 	while(1)
  	{   	
 	  //step 1:read uart1 
+	  len = uart1_read(buf,MAX_BUFSIZE);
 
 
 	  //step 2:check it's valid command
-
+	  if(len<=0){
+	  	 DelayMs(100);
+		 continue;
+	  }
+	  p.pbuf = buf;
+	  p.plen = len;
+	  prot = packet_protocol(&p);
 	  //step 3:command dispatch
 	  //secure card command 
 	  //read prf command
 	  //mcu command
+	  if(PPROT_SAM==prot){
+	  	//just write to secure
+		SAM_packet_handler(buf,len);
+	  }else if(PPROT_PRIV==prot){
+	  	PRIVATE_packet_handler(buf,len);
+	  }else {
+	  	//just drop ???
+	  }
 
-	  //step 4:execute command
-	  
+  	}  	 
+}
 
-	  len= read_sec(buf); 	 			//¶Á¼ÓÃÜÄ£¿é
-	  if (len!=0)
-	  {
 
-	
+void SAM_packet_handler(uint8* buf,int size){
+	unsigned char len;
+	unsigned char i;
+	uart2_write(buf,size);
+	//reuse buf;
+	len= read_sec(buf); 	 			//¶Á¼ÓÃÜÄ£¿é
+	if (len!=0)
+	{
 		if (buf[0]==0x05)
 		{
 			close_prf();				 //¹Ø±ÕÉäÆµ
@@ -75,12 +115,23 @@ void main()
 	  		len =len+1;
 			    
 	        write_sec(buf,len);			 //Ð´¼ÓÃÜÄ£¿é
-        
-		  
+	}
 
-	  }
+	//read from uart2 (for SAM return)
+	//and write it to uart1
+	do {
+		DelayMs(10);//fine tune?
+    	len = uart2_read(buf,MAX_BUFSIZE);
+		if(len>0)
+			uart1_write(buf,len);
+	}while(len>0);
 
-  	}  	 
 }
 
+void PRIVATE_packet_handler(uint8* buf,int size){
+	if(buf){
+	}
+	if(size){
+	}
+}
 
