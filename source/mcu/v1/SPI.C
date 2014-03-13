@@ -41,7 +41,7 @@
 #define MISO       P36
 //no POR on idr board
 //#define POR        P1_5	   
-#define STANDBY		P37
+#define STANDBY		P22
 
 
 //SPI ģʽоƬ��λ

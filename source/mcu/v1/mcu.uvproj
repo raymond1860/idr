@@ -7,7 +7,7 @@
 
   <Targets>
     <Target>
-      <TargetName>idr</TargetName>
+      <TargetName>mcu</TargetName>
       <ToolsetNumber>0x0</ToolsetNumber>
       <ToolsetName>MCS-51</ToolsetName>
       <TargetOption>
@@ -43,7 +43,7 @@
             <InvalidFlash>1</InvalidFlash>
           </TargetStatus>
           <OutputDirectory>.\</OutputDirectory>
-          <OutputName>idr</OutputName>
+          <OutputName>mcu</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
           <CreateHexFile>1</CreateHexFile>
@@ -284,7 +284,7 @@
             <uAregs>0</uAregs>
             <UseInterruptVector>1</UseInterruptVector>
             <Fuzzy>3</Fuzzy>
-            <Optimize>9</Optimize>
+            <Optimize>8</Optimize>
             <WarningLevel>2</WarningLevel>
             <SizeSpeed>1</SizeSpeed>
             <ObjectExtend>1</ObjectExtend>
@@ -354,64 +354,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>c</GroupName>
-          <Files>
-            <File>
-              <FileName>main.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\main.c</FilePath>
-            </File>
-            <File>
-              <FileName>secure.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\secure.c</FilePath>
-            </File>
-            <File>
-              <FileName>SPI.C</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\SPI.C</FilePath>
-            </File>
-            <File>
-              <FileName>uart.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\uart.c</FilePath>
-            </File>
-            <File>
-              <FileName>packet.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\packet.c</FilePath>
-            </File>
-            <File>
-              <FileName>thm3060.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\thm3060.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>include</GroupName>
-          <Files>
-            <File>
-              <FileName>STC15F2K08S2.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\STC15F2K08S2.h</FilePath>
-            </File>
-            <File>
-              <FileName>secure.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\secure.h</FilePath>
-            </File>
-            <File>
-              <FileName>spi.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\spi.h</FilePath>
-            </File>
-            <File>
-              <FileName>common.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>.\common.h</FilePath>
-            </File>
-          </Files>
+          <GroupName>source</GroupName>
         </Group>
       </Groups>
     </Target>

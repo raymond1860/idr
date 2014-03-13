@@ -7,7 +7,9 @@
 #include "packet.h"
 #include "thm3060.h"
 
-#define MAX_BUFSIZE 160
+#define HEART_BEAT P20
+
+#define MAX_BUFSIZE 120
 
 unsigned char xdata comm_buffer[64],comm_buffer2[64];	
 
@@ -52,12 +54,22 @@ void DelayMs(int ms){
 
 //main function  
 
-void main()
+void main(void)
 {
 	unsigned char idata buf[MAX_BUFSIZE];
-	unsigned char len; 	
+	int len; 	
 	unsigned char prot;
 	GenPacket p;
+	uint8 i;
+	#ifdef HEART_BEAT
+	i=3;
+	while(i-->0){
+	  HEART_BEAT=0;
+	  DelayMs(100);
+	  HEART_BEAT=1;
+	  DelayMs(100);
+	}
+	#endif
 	init_i2c();
 	uart1_init();
 	uart2_init();
@@ -73,7 +85,14 @@ void main()
 
 	  //step 2:check it's valid command
 	  if(len<=0){
+	  	 #ifdef HEART_BEAT
+		 HEART_BEAT=0;
+		 #endif
 	  	 DelayMs(100);
+ 	  	 #ifdef HEART_BEAT
+		 HEART_BEAT=1;
+		 DelayMs(100);
+		 #endif
 		 continue;
 	  }
 	  p.pbuf = buf;
