@@ -83,13 +83,14 @@ void uart1_write(const char* buf,int size){
 		uart1_writechar(buf[i++]);
 	}
 }
+/*
 char uart1_readchar(){
 	char c;
 	while(uart1_read_in == uart1_read_out) ;
     c = uart1_read_buf[uart1_read_out];
     INC_PTR(uart1_read_out,RCV_BUF_SIZE);
 	return(c);
-}
+}		*/
 //return read char count
 int uart1_read(char* buf,int max_size){
 	int ret=0;
@@ -181,13 +182,14 @@ void uart2_write(const char* buf,int size){
 	}
 }
 
+/*	   
 char uart2_readchar(){
 	char c;
 	while(uart2_read_in == uart2_read_out) ;
     c = uart2_read_buf[uart2_read_out];
     INC_PTR(uart2_read_out,RCV_BUF_SIZE);
 	return(c);
-}
+}*/
 int uart2_read(char* buf,int max_size){
 	int ret=0;
 	if(uart2_read_in != uart2_read_out) {

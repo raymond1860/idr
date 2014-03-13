@@ -4,6 +4,9 @@ typedef unsigned char uint8;
 typedef unsigned short uint16;
 typedef unsigned int  uint32;
 
+
+extern unsigned char xdata comm_buffer[64],comm_buffer2[64];	
+
 #define FOSC 13560000L
 
 /*UART*/
@@ -25,7 +28,7 @@ void uart1_write(const char* buf,int size);
 //return read char count
 int uart1_read(char* buf,int max_size);
 //read single char ,block operation
-char uart1_readchar();
+//char uart1_readchar();
 
 
 //UART2 is for SAM&MCU
@@ -33,8 +36,7 @@ void uart2_init(void);
 void uart2_writechar(char c);
 void uart2_write(const char* buf,int size);
 
-//return read char count
-char uart2_readchar(void);
+//char uart2_readchar(void);
 //return read char count
 int uart2_read(char* buf,int max_size);
 

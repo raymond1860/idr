@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "STC15F2K08S2.h"
 #include "spi.h"
 #include "secure.h"
@@ -8,14 +9,17 @@
 
 #define MAX_BUFSIZE 160
 
+unsigned char xdata comm_buffer[64],comm_buffer2[64];	
+
+
 void SAM_packet_handler(uint8* buf,int size);
 void PRIVATE_packet_handler(uint8* buf,int size);
-void Delay1ms(void)		//@13.56MHz
+void Delay1ms()		//@27MHz
 {
 	unsigned char i, j;
 
-	i = 14;
-	j = 45;
+	i = 27;
+	j = 64;
 	do
 	{
 		while (--j);
@@ -50,7 +54,7 @@ void DelayMs(int ms){
 
 void main()
 {
-	unsigned char idata buf[160];
+	unsigned char idata buf[MAX_BUFSIZE];
 	unsigned char len; 	
 	unsigned char prot;
 	GenPacket p;
@@ -85,16 +89,11 @@ void main()
 	  }else if(PPROT_PRIV==prot){
 	  	PRIVATE_packet_handler(buf,len);
 	  }else {
-	  	//just drop ???
+	  	//just drop ???		
 	  }
 
   	}  	 
 }
-
-void THM_ChangeProtBaud(unsigned char prot, unsigned char sndbaud, unsigned char rcvbaud)
-{
-    write_reg( PSEL, prot | sndbaud | rcvbaud );
-}    
 
 
 void SAM_packet_handler(uint8* buf,int size){
@@ -136,6 +135,8 @@ void SAM_packet_handler(uint8* buf,int size){
 
 void PRIVATE_packet_handler(uint8* buf,int size){
 	uint8* cmd_buf = buf+3;	//just skip prefix
+	uint8 ret;
+	if(size){}
 	switch(cmd_buf[0]){
 		case CMD_CLASS_COMM:{
 			//FIXME
@@ -150,7 +151,32 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 					 * FMT: |CLASS[1]|CMD[1]|DELAY[2](0->no wait,0xffff->always wait)|
 					 * ANSWER:|STATUS_CODE[2]|TYPE[1](0x0A->Type A,0x0B Type B)|UID[4]|
 					*/
-					uint16 delaytime_ms = (cmd_buf[2]<<8)+cmd_buf[3];
+					int plen;
+					uint8 anti_flag;
+					uint16 delaytime_ms = (cmd_buf[2]<<8)+cmd_buf[3]; 
+					uint16 uid_len=0;
+					uint16 *sw;
+					//step down delay time to meet host requirement
+					if(delaytime_ms!=0xffff) delaytime_ms--;
+					//generall uid_len is 4
+					close_prf();DelayMs(5);
+					open_prf();	DelayMs(5);
+					do {
+						ret = THM_Anticollision2(&anti_flag,&uid_len,comm_buffer);  
+					}while(!ret&&(delaytime_ms>0));
+
+					//prepare answer payload
+					sw = (unsigned short*)&comm_buffer2[0];
+					*sw = (!ret)?STATUS_CODE_CARD_NOT_ANSWERED:STATUS_CODE_SUCCESS;
+					comm_buffer2[2] = (ret)?0x0A:0x00;
+					if(uid_len>0)
+						memcpy(&comm_buffer2[3],comm_buffer,uid_len);
+
+					//setup answer packet now
+					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer2,uid_len+3);
+
+					//send answer packet to uart1
+					uart1_write(buf,plen); 
 				}break;
 			}	
 		}break;

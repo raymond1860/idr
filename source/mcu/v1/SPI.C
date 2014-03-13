@@ -214,11 +214,159 @@ extern void write_prf(unsigned char *buffer,unsigned int num)
 	SS_N = 1;
 
 	write_reg(SCON_60,0x03);    // STARTSEND =1 ，开始发送	
-
-
-
 }
 
+// SPI 模式等待接收结束，并读出接收数据,数据存在缓冲区 buffer 中，长度为 len
+// 返回值为接收状态
+//Waiting for receiving end, write the received data to the "buffer" ,its length is "len"
+//Return of function is the receiving status
+extern unsigned char THM_WaitReadFrame(unsigned short *len, unsigned char *buffer)
+{
+	unsigned char temp,temp1;	
+	*len = 0;
+	// 等待接收结束	
+	//waiting for the end of receive
+	while (1)	
+	{  	    
+	   temp = read_reg(RSTAT);   
+	   if (temp & 0x80)
+	        break;
+    }	           
+    // 处理返回状态状态值
+	// handling the  receiving status
+    if (temp & CERR )   
+        temp = CERR;                //碰撞错误
+		                            //BitPos  
+    else if (temp & PERR)       
+        temp = PERR;                //奇偶校验位错误
+		                            //Frame Error
+    else if (temp & FERR)       
+        temp = FERR;
+    else if (temp & DATOVER)       
+        temp = DATOVER;            //数据溢出
+		                           //Data Overflow
+    else if (temp & TMROVER)
+        temp = TMROVER;             //超时错误
+		                            //Timeout
+    else if (temp & CRCERR)   
+        temp = CRCERR;              //CRC 计算错误
+		                            //CRC Error
+    else 
+        temp = FEND;                //帧正常结束
+		                            //Frame correct 
+    //取得接收长度值
+	//read the data length
+    *len =((unsigned short)(read_reg(RSCH)) <<8 ) + read_reg(RSCL);  		    
+    //读取接收数据 
+	//read the data
+    if (*len != 0x00 )
+    {
+        SS_N = 0;
+        
+        temp1 = DATA;
+        send_buff( &temp1,1);
+        receive_buff( buffer,*len);
+        
+        SS_N = 1;
+    }      
+    //清除状态标志
+	//clear the status
+    write_reg(RSTAT,0x00);        
+    return (temp);
+}
+
+/* This is only for mifare
+// 返回值为接收状态
+//Waiting for receiving end, write the received data to the "buffer" ,its length is "len"
+//Return of function is the receiving status
+extern unsigned char THM_MWaitReadFrame(unsigned short *len, unsigned char *buffer)
+{
+	unsigned char temp,temp1;	
+	*len =0;
+	// 等待接收结束	
+	//waiting the end of receive
+	while (1)	
+	{  	    
+	   temp = THM_ReadReg(UART_STAT);   
+	   if (temp & 0xFF)
+	        break;
+    }	           
+    // 处理返回状态状态值
+	//handling the receiving status
+    if (temp & 0xEF) 
+	{
+	    THM_WriteReg(UART_STAT,0x00);
+		return (temp & 0xEF);		
+	}
+    //取得接收长度值
+	//read the data length
+    *len =((unsigned short)(THM_ReadReg(RSCH)) <<8 ) + THM_ReadReg(RSCL);  		    
+    //读取接收数据 
+	//read the data
+    if (*len != 0x00 )
+    {
+        SPI_FRAME_START();
+        
+        temp1 = DATA;
+        SPI_SendBuff( &temp1,1);
+        SPI_RecvBuff( buffer,*len);
+        
+        SPI_FRAME_END();
+    }      
+    //清除状态标志
+	//clear the status
+    THM_WriteReg(UART_STAT,0x00);        
+    return (temp);
+}
+
+*/
+// 发送数据子程序	
+//send data frame	 
+extern void THM_SendFrame(unsigned char *buffer,unsigned short num)
+{
+	#if 0
+	unsigned char temp;	
+	THM_WriteReg(SCNTL, 0x5);	                                //RAMPT_CLR =1,CLK_EN =1
+	THM_WriteReg(SCNTL, 0x01);                                  // RAMPT_CLK=0;	
+	
+	temp = DATA | 0x80;			                                //写数据寄存器命令 	
+	                                                            //write mode
+	                        
+	SPI_FRAME_START();
+	
+	SPI_SendBuff(&temp,1);
+	SPI_SendBuff(buffer,num);	                                //写入数据	
+	                                                            //write data
+	
+	SPI_FRAME_END();
+	
+	THM_WriteReg(SCNTL, 0x03);                                  //SEND =1 ，开始发送
+	                                                            //SEND =1,start sending
+	#else
+	write_prf(buffer,num);
+	#endif																
+}
+/*This is only for mifare
+// 发送数据子程序Mifare	
+//send data frame mifare	 
+extern void THM_MSendFrame(unsigned char *buffer,unsigned short num)
+{
+	unsigned char temp;	
+	THM_WriteReg(SCNTL, 0x5);	                                //RAMPT_CLR =1,CLK_EN =1
+	THM_WriteReg(SCNTL, 0x01);                                  // RAMPT_CLK=0;	
+	
+	temp = DATA | 0x80;			                                //写数据寄存器命令 	
+	                        									//write mode 
+	SPI_FRAME_START();
+	
+	SPI_SendBuff(&temp,1);
+	SPI_SendBuff(buffer,num);	                                //写入数据	
+																//write data
+	SPI_FRAME_END();
+	
+	THM_WriteReg(SND_CTRL, 0x01);                               // SEND =1 ，开始发送		
+}	
+*/					
 
 //打开射频
 extern void open_prf()

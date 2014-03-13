@@ -45,4 +45,9 @@
 #define RCV_BAUD_424K   0x02
 #define RCV_BAUD_848K   0x03
 
+
+    unsigned char THM_Anticollision(unsigned char * b_uid);
+    unsigned char THM_Anticollision2(unsigned char * anti_flag,unsigned short * uid_len_all,unsigned char * b_uid);
+    unsigned char THM_Anti(unsigned char cmm_head , unsigned short * uid_len,unsigned char * b_uid);
+
 #endif
