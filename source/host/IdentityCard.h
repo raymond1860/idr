@@ -25,7 +25,7 @@ typedef struct tag_ID2Info
  * 	0  - success
  */
 
-int libid2_open(char *uart_name);
+int libid2_open(const char *uart_name);
 /*
  *  
  *

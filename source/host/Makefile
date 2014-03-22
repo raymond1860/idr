@@ -5,9 +5,9 @@ LDIR =../lib
 
 LIBS=-ldl -lpthread
 
-DEPS = IdentityCard.h
+DEPS = IdentityCard.h platform.h option.h
 
-OBJS = main.o IdentityCard.o 
+OBJS = option.o platform.o IdentityCard.o main.o
 
 
 %.o: %.c $(DEPS)

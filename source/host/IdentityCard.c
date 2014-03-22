@@ -1,18 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/select.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <termios.h>
-#include <dlfcn.h>
-
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <strings.h>
-#include <string.h>
-#include <stdio.h>
-#include <errno.h>
+#include "platform.h"
 #include "IdentityCard.h" 
 
 #define DEBUG 1
@@ -61,8 +47,7 @@ static struct cmd_list {
 };
 
 #define   BAUDRATE    115200
-#define   SUCCESSED     0
-#define   FAILED           -1
+
 
 #define INTERNAlTIMEOUT   1
 
@@ -84,132 +69,25 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int time_out);
 */
 #define TIMEOUT_SEC(buflen) (buflen*20/BAUDRATE)
 
-static struct termios oldTermio, newTermios;
 
 
-int set_portAttr (int fd, unsigned int baudrate,
-                          int databit, int stopbits, int parity)
-{
-	memset(&newTermios, 0, sizeof (newTermios));
-	
-	switch (baudrate) {
-		case 1200:
-			newTermios.c_cflag =  (B1200);
-			break;
-		case 2400:
-			newTermios.c_cflag =  (B2400);
-			break;
-		case 9600:
-			newTermios.c_cflag = (B9600);
-			break;
-		case 19200:
-			newTermios.c_cflag = (B19200);
-			break;
-		case 38400:
-			newTermios.c_cflag = (B38400);
-			break;
-		case 57600:
-			newTermios.c_cflag = (B57600);
-			break;
-		case 115200:
-			newTermios.c_cflag = (B115200);
-			break;
-		default:
-			newTermios.c_cflag = (B9600);
-			break;
-	}
-	
-	
-	newTermios.c_cflag |= CLOCAL | CREAD;      /* | CRTSCTS */
-	//set stop bit
-	newTermios.c_cflag &= ~CSIZE;
-
-	switch (databit) {
-		case 8:
-			newTermios.c_cflag |= CS8;
-			break;
-		case 7:
-			newTermios.c_cflag |= CS7;
-			break;
-		case 6:
-			newTermios.c_cflag |= CS6;
-			break;
-		case 5:
-			newTermios.c_cflag |= CS5;
-			break;
-		default:
-			newTermios.c_cflag |= CS8;
-			break;
-	}
-
-	switch (parity) {
-		case 'N':                  /* no parity check */
-			newTermios.c_cflag &= ~PARENB;
-			break;
-		case 'E':                  /* even */
-			newTermios.c_cflag |= PARENB;
-			newTermios.c_cflag &= ~PARODD;
-			break;
-		case 'O':                  /* odd */
-			newTermios.c_cflag |= PARENB;
-			newTermios.c_cflag |= ~PARODD;
-			break;
-		default:                   /* no parity check */
-			newTermios.c_cflag &= ~PARENB;
-			break;
-	}  
-	//
-	// set stopbit
-	switch (stopbits)
-	{   
-		case 1:    
-			newTermios.c_cflag &= ~CSTOPB;  
-			break;  
-		case 2:    
-			newTermios.c_cflag |= CSTOPB;  
-		  	break;
-		default:    
-			newTermios.c_cflag &= ~CSTOPB; /* 1 stop bit */
-			break;
-	} 
-	
-	tcflush (fd, TCIFLUSH);
-	newTermios.c_cflag |= CLOCAL | CREAD;	   /* | CRTSCTS */
-
-	newTermios.c_oflag = 0;
-    	//newTermios.c_lflag |= 0;
-	
-	//newTermios.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG); 
-	newTermios.c_oflag &= ~OPOST;
-	newTermios.c_cc[VTIME] = 1;        /* unit: 1/10 second. */
-	newTermios.c_cc[VMIN] = 0;//1; /* minimal characters for reading */
-	
-	if (tcsetattr(fd,TCSANOW,&newTermios) != 0)   
-	{ 
-		printf("SetPortAttr err  \n");   
-		return -1;  
-	} 
-	return 0;
-}
 
 //OpenComPort(RF_SERIAL_PORT,115200,8,"1",0)==-1?false:true;
 
-int libid2_open(char *uart_name)
+int libid2_open(const char *uart_name)
 {
 	int retval;
 
-	fdport = open (uart_name, O_RDWR  |O_NONBLOCK | O_NOCTTY);//O_NONBLOCK //  | O_NOCTTY
-	if (-1 == fdport) {
+	fdport = serialport_open (uart_name);//O_NONBLOCK //  | O_NOCTTY
+	if (fdport<0) {
 		printf ("cannot open port %s\n",uart_name);
 		return -1;
 	}
 
-	tcgetattr (fdport, &oldTermio);       /* save old termios value */
-	 
-	retval = set_portAttr (fdport,BAUDRATE, 8, 1, 0);
-	if (-1 == retval) {
+	retval = serialport_config (fdport,BAUDRATE, 8, 1, 0);
+	if (retval<0) {
 		printf("SetPortAttr err \n");
-		close(fdport);
+		serialport_close(fdport);
 		return -1;
 	}
 	return 0;
@@ -232,11 +110,7 @@ static int receive_buff(int cmd_index, char *buff,int *bufflenth ,int time_out)
 			return -1;
 		}
 		
-#if(0)
-{
-	printf("send suceess\n");
-}
-#endif
+
 		ret = cmd_resp(cmd_index,buff,bufflenth,time_out);
 
 		if(ERRTIMEOUT == ret)
@@ -248,12 +122,7 @@ static int receive_buff(int cmd_index, char *buff,int *bufflenth ,int time_out)
 		{
 			return -1;
 		}
-#if(0)
-{
-	printf("resp suceess\n");
-}
-#endif		
-				
+			
 		return 0;		
 	}
 	
@@ -395,7 +264,7 @@ int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 		{
 			return -1;
 		}
-		tcflush (fdport, TCIFLUSH);
+		serialport_flush (fdport, 2);
 		usleep(10000);
 		ret = receive_buff((int)CMD_FIND_CARD, NULL, NULL,time_out);
 		if(ret <0)
@@ -403,7 +272,7 @@ int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 			usleep(10000);
 			continue;
 		}
-		tcflush (fdport, TCIFLUSH);
+		serialport_flush (fdport, 2);
 		usleep(10000);
 		ret =  receive_buff((int)CMD_SELECT_CARD, NULL, NULL,time_out);
 		if(ret <0)
@@ -411,7 +280,7 @@ int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 			usleep(10000);
 			continue;
 		}
-		tcflush (fdport, TCIFLUSH);
+		serialport_flush (fdport, 2);
 		usleep(10000);
 		 ret = receive_buff((int)CMD_READ_CARD, id2info, id2infolength,time_out);
 		 if(ret <0)
@@ -435,11 +304,8 @@ void libid2_close(void)
 		printf("fdport not open or power is off");
 		return ;
 	}
-	fdport = -1;
-
-    /* flush output data before close and restore old attribute */
-	tcsetattr (fdport, TCSADRAIN, &oldTermio);
-	close (fdport);
+	serialport_close (fdport);
+	fdport = -1;	
 }
 
 static int check_header(char *header)
@@ -460,10 +326,10 @@ static int send_cmd(int cmd_index)
 		printf("cmd isn't valid! cmd = %d\n", cmd_index);
 		return -1;
 	}
-#if 1
+
 	while(1)
 	{
-		writelenth = write(fdport, cmds_list[cmd_index].cmd, CMD_LENGTH) ;
+		writelenth = serialport_write(fdport, cmds_list[cmd_index].cmd, CMD_LENGTH) ;
 		if(writelenth <= 0)
 		{
 			printf("write %d\n", writelenth);
@@ -475,12 +341,7 @@ static int send_cmd(int cmd_index)
 			return 0;	
 		}
 	}
-	/* write the cmd to the id2 module
-	 * FIXME: rewrite this!!!
-	 * */
-#else	 
-	while (write(fdport, cmds_list[cmd_index].cmd, CMD_LENGTH) != CMD_LENGTH);
-#endif
+
 	return 0;
 }
 
@@ -508,11 +369,6 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int timeout)
 	gettimeofday(&t_start, NULL); 
 	time_start_receive = ((long)t_start.tv_sec)*1000+(long)t_start.tv_usec/1000; 
 
-	/* read packet header */
-	/* FIXME: rewrite this!!! */
-	//printf("zzm\n");
-	
-#if 1
 	while(1)
 	{
 
@@ -532,7 +388,7 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int timeout)
 			return ERRTIMEOUT;
 		}
 
-		readlenth = read(fdport, header + readTotalLen, RESP_HEADER_LEN - readTotalLen) ;
+		readlenth = serialport_read(fdport, header + readTotalLen, RESP_HEADER_LEN - readTotalLen,0) ;
 
 		if(readlenth <= 0)
 		{
@@ -554,9 +410,7 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int timeout)
 	}
 	
  	
-#else		
-	while (read(fdport, header, RESP_HEADER_LEN) != RESP_HEADER_LEN);
-#endif
+
 
 	if (check_header(header)) {
 #if (DEBUG)			
@@ -623,7 +477,7 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int timeout)
 			return ERRTIMEOUT;
 		}
 
-		readlenth = read(fdport, tmp_buf + readTotalLen , data_len - readTotalLen) ;
+		readlenth = serialport_read(fdport, tmp_buf + readTotalLen , data_len - readTotalLen,0) ;
 		if(readlenth <= 0)
 		{
 			usleep(1000);
@@ -987,7 +841,7 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 
 
 
-	writelenth = write(fdport, iSendData, 9) ;
+	writelenth = serialport_write(fdport, iSendData, 9) ;
 	
 	if(writelenth != 9)
 	{
@@ -1002,7 +856,7 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 	memset(recbuf,0,256);
 	while(1)
 	{
-		readlenth = read(fdport, &recbuf[totallenth],256 -totallenth) ;
+		readlenth = serialport_read(fdport, &recbuf[totallenth],256 -totallenth,0) ;
 		if(readlenth >0)
 		{
 			totallenth +=  readlenth;
