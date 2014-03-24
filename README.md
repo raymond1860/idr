@@ -11,8 +11,8 @@ Structure
     │  └─mcu
     │      ├─SOURCE -->reference design source
     │      │  ├─main
-    │     │  ├─secure
-    │      │  └─spi
+    │      │  ├─secure
+    │      │  └─spi 
     │      ├─UV2    -->reference design project 
     │      └─v1     -->new designed mcu project
     └─tools    -->tools for debugging and provisioning
