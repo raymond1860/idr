@@ -795,7 +795,7 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 	
 	char recbuf[256]={0};
 	char lrc;
-	char iSendData[256] = {0};
+	unsigned char iSendData[256] = {0};
 	int i;
 	char *pSrc;
 	char tempstr[20];
@@ -820,8 +820,8 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 	iSendData[3] = 0x32;
 	iSendData[4] = 0x41 ;
 	//time out
-	iSendData[5] = (char)((DelayTime & 0xff00)>>8);
-	iSendData[6] = (char)((DelayTime & 0x00ff)); 
+	iSendData[5] = (unsigned char)((DelayTime & 0xff00)>>8);
+	iSendData[6] = (unsigned char)((DelayTime & 0x00ff)); 
 
 	lrc = iSendData[3];
 	pSrc = &iSendData[4];
@@ -834,11 +834,8 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 
 	iSendData[7] = lrc;
 	iSendData[8] = 0x03;
-	for(i = 0;i<9;i++)
-	{
-		printf("iSendData = %02x\n",iSendData[i]);
-	}
-
+	
+	dump("icc packet",iSendData,10);
 
 
 	writelenth = serialport_write(fdport, iSendData, 9) ;

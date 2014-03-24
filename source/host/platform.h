@@ -45,6 +45,8 @@ typedef int bool;
 #endif
 
 
+void dump(const char *prefix,const unsigned char *data ,int size);
+
 int serialport_open(const char* name);
 
 int serialport_close(int fd);
