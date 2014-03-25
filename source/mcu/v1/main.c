@@ -8,7 +8,7 @@
 #include "thm3060.h"
 
 
-//#define UART_DEBUGGING
+//#define IAP_ENABLED
 
 #define MAX_BUFSIZE 128
 
@@ -59,47 +59,37 @@ void main(void)
 	unsigned char idata buf[MAX_BUFSIZE];
 	int len; 	
 	unsigned char prot;
-	uint8 i;
+	uint8 i=0;
 
-	#ifdef HEART_BEAT
-	i=3;
-	while(i-->0){
-	  HEART_BEAT=0;
+	while(++i<=3){
+	  DbgLeds(0x00);
 	  DelayMs(100);
-	  HEART_BEAT=1;
+	  DbgLeds(0xff);
 	  DelayMs(100);
 	}
-	#endif
 	init_i2c();
-	#ifndef UART_DEBUGGING
+	#ifndef IAP_ENABLED
 	uart1_init();
 	#endif
 	uart2_init();
     reset_prf();				//SPI 模式芯片复位
     write_reg(TMRL,0x08);    	//设置最大响应时间,单位302us
 
+	
 	while(1)
  	{   
-	  #ifndef UART_DEBUGGING
+	  #ifndef IAP_ENABLED
 	  //step 1:read uart1 
 	  len = uart1_read(buf,MAX_BUFSIZE);
+ 	  //buf[0]=0xAA; buf[1]=0xAA;  buf[2]=0xAA;  buf[3]=0x96;  buf[4]=0x69;
+	  //buf[5]=0x00;buf[6]=0x03; buf[7]=0x12; buf[8]=0xff; buf[9]=0xee; len = 10;
 
 
 	  //step 2:check it's valid command
 	  if(len<=0){
-	  	 #ifdef HEART_BEAT
-		 HEART_BEAT=0;
-		 #endif
+	     DbgLeds(0x01);
 	  	 DelayMs(100);
- 	  	 #ifdef HEART_BEAT
-		 HEART_BEAT=1;
-		 DelayMs(100);
-		 #endif
 		 continue;
-	  }else {
-  	  	 #ifdef HEART_BEAT
-		 HEART_BEAT=0;
-		 #endif
 	  }
 	  #else
 	  //just write test command to sam
@@ -138,25 +128,21 @@ void main(void)
 	  }else {
 	  	//just drop ???		
 	  }
-
+	  DbgLeds(0x04);
   	}  	 
 }
 
-/*
- * We must parse SAM packet to decide whether we should 
- read SAM or not
-*/
 
 void SAM_packet_handler(uint8* buf,int size){
-	unsigned char len;
+	unsigned char len,totallen;
 	unsigned char i;
+	DbgLeds(0x02);
 	uart2_write(buf,size);
-	/*
 	//reuse buf;
-	len= read_sec(buf); 	 			//读加密模块
-	
+	len= read_sec(buf); 	 			//读加密模块 	
 	if (len!=0)
 	{
+		DbgLeds(0x07);
 		if (buf[0]==0x05)
 		{
 			close_prf();				 //关闭射频
@@ -173,23 +159,30 @@ void SAM_packet_handler(uint8* buf,int size){
 	  		len =len+1;
 			    
 	        write_sec(buf,len);			 //写加密模块
+	}else {
+		DbgLeds(0x03);
 	}
-	*/
 	//read from uart2 (for SAM return)
 	//and write it to uart1
+	totallen=i=0;
 	do {
 		DelayMs(100);//fine tune?
+		DbgLeds(0x08);	
     	len = uart2_read(buf,MAX_BUFSIZE);
-		#ifndef UART_DEBUGGING
-		if(len>0)
+		#ifndef IAP_ENABLED
+		if(len>0){
+			DbgLeds(0x09);
 			uart1_write(buf,len);
+			totallen+=len;
+		}else {
+			DbgLeds(0xA);
+		}
 		#endif
-		#ifdef HEART_BEAT
-		HEART_BEAT=0;
-		DelayMs(100);
-		HEART_BEAT=1;
-		#endif
-	}while(len>0);
+		i++;
+		
+	}while(!totallen&&i<10);
+
+	DbgLeds(0x04);
 
 }
 
@@ -241,4 +234,34 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 
 	}
 }
+
+#ifdef ENABLE_LED_DEBUG
+void DbgLeds(uint8 led){
+	#ifdef LED_DBG_BIT1
+	LED_DBG_BIT1=led&0x1?0:1;
+	#endif
+	#ifdef LED_DBG_BIT2
+	LED_DBG_BIT2=led&0x2?0:1;
+	#endif
+	#ifdef LED_DBG_BIT3
+	LED_DBG_BIT3=led&0x4?0:1;
+	#endif
+	#ifdef LED_DBG_BIT4
+	LED_DBG_BIT4=led&0x8?0:1;
+	#endif
+	#ifdef LED_DBG_BIT5
+	LED_DBG_BIT5=led&0x10?0:1;
+	#endif
+	#ifdef LED_DBG_BIT6
+	LED_DBG_BIT6=led&0x20?0:1;
+	#endif
+	#ifdef LED_DBG_BIT7
+	LED_DBG_BIT7=led&0x40?0:1;
+	#endif
+	#ifdef LED_DBG_BIT8
+	LED_DBG_BIT8=led&0x80?0:1;
+	#endif				 
+//	DelayMs(50);
+}
+#endif
 

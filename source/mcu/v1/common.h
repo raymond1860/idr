@@ -1,8 +1,9 @@
 #ifndef COMMON_H
 #define COMMON_H 1
 
+#define ENABLE_LED_DEBUG
 
-#define HEART_BEAT P03
+
 
 typedef unsigned char uint8;
 typedef unsigned short uint16;
@@ -37,6 +38,18 @@ int uart2_read(char* buf,int max_size);
 
 void Delay1ms();
 void DelayMs(int ms);
+
+#ifdef ENABLE_LED_DEBUG
+//maximum 8bit led debug output
+//and assume low active
+#define LED_DBG_BIT1 P03
+#define LED_DBG_BIT2 P00
+#define LED_DBG_BIT3 P23
+#define LED_DBG_BIT4 P37
+void DbgLeds(uint8 led);
+#else
+#define DbgLeds(x)
+#endif
 
 
 

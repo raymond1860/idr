@@ -84,7 +84,7 @@ unsigned char  read_sec(unsigned char idata * dat)
 	//we just wait a litte time out here
 	while(TX_FRAME==0) {
 		Delay1ms();
-		if(++temp==200) return 0;
+		if(++temp==100) return 0;
 	}
 
 	//once TX_FRAME is high,we should disable interrutp to simulate i2c xfer

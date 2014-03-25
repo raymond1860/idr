@@ -5,8 +5,7 @@
 	if((++e) >= max) e = 0;		  
 
 
-#define RCV_BUF_SIZE 128
-#define SND_BUF_SIZE 256
+#define RCV_BUF_SIZE 256
 
 #define S2_S0 0x01              //P_SW2.0
 
@@ -30,7 +29,7 @@ void uart1_init(void)	  //115200bps@27MHz
 
 
 
-static void serial_interrupt(void) interrupt 4  using 3
+static void serial_interrupt(void) interrupt 4  using 1
 {   		   	    
 	if(RI)  /* Receive mode */
 	{
@@ -45,9 +44,8 @@ static void serial_interrupt(void) interrupt 4  using 3
 void uart1_write(const char* buf,int size){
 	uint8 i=0; 	
 	while(i<size){
-		TI=0;
 		SBUF = buf[i];
-		while(0==(TI));
+		while(0==(TI));	TI=0;
 		i++;
 	}
 }
@@ -75,19 +73,20 @@ static unsigned char xdata uart2_read_in,uart2_read_out;
 #define S2TB8 0x08
 void uart2_init()	  //115200bps@27MHz
 {
-	P_SW2 &=~S2_S0;
+    P_SW2 &= ~S2_S0;            //S2_S0=0 (P1.0/RxD2, P1.1/TxD2)
+//  P_SW2 |= S2_S0;             //S2_S0=1 (P4.6/RxD2_2, P4.7/TxD2_2)
 	S2CON = 0x50;		//8位数据,可变波特率
 	AUXR |= 0x14;		//启动定时器2
 	T2L = 0xC5;//(65536 - (FOSC/4/BAUDRATE));   //设置波特率重装值  0xC5;		//设定定时初值
 	T2H = 0xff;//(65536 - (FOSC/4/BAUDRATE))>>8;		//设定定时初值
-	IE2 = 0x1;
+	IE2 |= 0x1;
 	EA = 1;
 	uart2_read_in  = uart2_read_out = 0;
 
 }
 
 
-static void serial2_interrupt(void) interrupt 8  using 3
+static void serial2_interrupt(void) interrupt 8  using 1
 {   						    
 	if(S2CON&S2RI)  /* Receive mode */
 	{
@@ -101,9 +100,8 @@ static void serial2_interrupt(void) interrupt 8  using 3
 void uart2_write(const char* buf,int size){
 	uint8 i=0; 	
 	while(i<size){
-		S2CON&=~S2TI;
 		S2BUF = buf[i];
-		while(0==(S2TI&S2CON)) ;
+		while(0==(S2TI&S2CON)) ;S2CON&=~S2TI;
 		i++;
 	}
 }
