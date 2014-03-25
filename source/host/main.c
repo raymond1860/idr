@@ -138,7 +138,7 @@ static void usage(const char* program){
     exit(-1);
 }
 int main(int argc, char *argv[]) {
-	int i;
+	int i=0;
 	char* port="/dev/ttyS1";
     int baudrate = 115200;	
 
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
             usage(argv[0]);
     }
     
-	printf("Port [%s] will be opened\n",port);
+	printf("Port [%s@%d] will be opened\n",port,baudrate);
 
 	return uart_cli_loop(port);
 }
