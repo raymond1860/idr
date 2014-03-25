@@ -4,6 +4,7 @@
 *.OBJ
 *.lst
 *.LST
+*.plg
 
 # Libraries
 *.lib
