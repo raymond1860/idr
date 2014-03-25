@@ -35,7 +35,7 @@ int uart_cli_loop(const char* dev){
         "Quit         ---quit\n"
 		"reset        ---reset sam\n"        
         "info         ---read card info\n"                		
-        "SAMid        ---get card samid\n"
+        "SAMid        ---get sam id\n"
 		"ICCid        ---get icc card type and id\n"
          "*******************************************\n\n");
 
