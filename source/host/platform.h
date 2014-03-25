@@ -39,7 +39,7 @@ typedef int bool;
 #include <termios.h>
 #include <stdbool.h>
 #include <errno.h>
-
+#include <dlfcn.h>
 #else
 #error "unknown platform"
 #endif

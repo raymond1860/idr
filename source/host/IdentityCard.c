@@ -3,8 +3,13 @@
 
 #define DEBUG 0
 
+#define FILENAME_ID2     "/system/usr/id.wlt"  //
+#define FILENAME_BMP    "/id.bmp"
+
+#define ATTR_POWER  "/sys/class/gpio/gpio45/value"
 static long  time_start =0;
 
+static int   cancel_flag =0;
 
 
 typedef struct
@@ -22,7 +27,8 @@ enum {
 	CMD_FIND_CARD = 2,
 	CMD_SELECT_CARD =3,
 	CMD_READ_CARD = 4,
-	CMD_MAX_SIZE = 5
+	CMD_GET_ICCARD = 5,
+	CMD_MAX_SIZE = 6
 };
 
 #define CMD_LENGTH 10
@@ -44,10 +50,12 @@ static struct cmd_list {
 	{CMD_FIND_CARD, "\xAA\xAA\xAA\x96\x69\x00\x03\x20\x01\x22", "\x00\x00\x9f\x00\x00\x00\x00\x97"},
 	{CMD_SELECT_CARD, "\xAA\xAA\xAA\x96\x69\x00\x03\x20\x02\x21", "\x00\x00\x90\x00\x00\x00\x00\x00\x00\x00\x00\x9c"},
 	{CMD_READ_CARD, "\xAA\xAA\xAA\x96\x69\x00\x03\x30\x01\x32", NULL},
+	{CMD_GET_ICCARD, "\xAA\xAA\xAA\x96\x69\x00\x03\x30\x01\x32", NULL},
 };
 
 #define   BAUDRATE    115200
-
+#define   SUCCESSED     0
+#define   FAILED           -1
 
 #define INTERNAlTIMEOUT   1
 
@@ -217,7 +225,7 @@ int libid2_getsamid(char *samid,int *samlenth,int time_out)
 	int templenth =0 ,ret =0;
 
 	char descsamid[40]="";
-	if((fdport <=0) || (libid2_get_power_state() != 3))
+	if((fdport <=0) || (libid2_get_power_state() != 1))
 	{
 		printf("fdport not open or power is off \n");
 		return -1;
@@ -226,7 +234,7 @@ int libid2_getsamid(char *samid,int *samlenth,int time_out)
 	gettimeofday(&t_start, NULL); 
 	time_start = ((long)t_start.tv_sec)*1000+(long)t_start.tv_usec/1000; 
 
-	ret = receive_buff(CMD_GET_SAMID, samid, samlenth,time_out);
+	ret = receive_buff(CMD_GET_SAMID, tempsamid, &templenth,(int)10);
 	if(ret < 0)
 	{
 		return -1;
@@ -239,16 +247,20 @@ int libid2_getsamid(char *samid,int *samlenth,int time_out)
 	return 0; 
 }
 
+void libid2_cancel_read_id2()
+{
+	cancel_flag = 1;
+}
 
 int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 {
 	int ret ;
-	if((fdport <=0) || (libid2_get_power_state() != 3))
+	if((fdport <=0) || (libid2_get_power_state() != 1))
 	{
 		printf("fdport not open or power is off \n");
 		return -1;
 	}
-
+	cancel_flag = 0;
 	struct timeval t_start,t_end; 
 	long  time_end =0; //ms
 
@@ -265,6 +277,10 @@ int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 			return -1;
 		}
 		serialport_flush (fdport, 2);
+		if(cancel_flag ==1)
+		{
+			return -1;
+		}
 		usleep(10000);
 		ret = receive_buff((int)CMD_FIND_CARD, NULL, NULL,time_out);
 		if(ret <0)
@@ -273,6 +289,10 @@ int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 			continue;
 		}
 		serialport_flush (fdport, 2);
+		if(cancel_flag ==1)
+		{
+			return -1;
+		}
 		usleep(10000);
 		ret =  receive_buff((int)CMD_SELECT_CARD, NULL, NULL,time_out);
 		if(ret <0)
@@ -281,8 +301,16 @@ int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 			continue;
 		}
 		serialport_flush (fdport, 2);
+		if(cancel_flag ==1)
+		{
+			return -1;
+		}
 		usleep(10000);
 		 ret = receive_buff((int)CMD_READ_CARD, id2info, id2infolength,time_out);
+		if(cancel_flag ==1)
+		{
+			return -1;
+		}
 		 if(ret <0)
 		{
 			usleep(10000);
@@ -299,7 +327,7 @@ int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 
 void libid2_close(void)
 {
-	if((fdport <=0) || (libid2_get_power_state() != 3))
+	if((fdport <=0) || (libid2_get_power_state() != 1))
 	{
 		printf("fdport not open or power is off");
 		return ;
@@ -389,7 +417,10 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int timeout)
 		}
 
 		readlenth = serialport_read(fdport, header + readTotalLen, RESP_HEADER_LEN - readTotalLen,0) ;
-
+		if(cancel_flag == 1)
+		{
+			return -1;
+		}
 		if(readlenth <= 0)
 		{
 			//printf("read readlength %d\n", readlenth);
@@ -471,13 +502,17 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int timeout)
 			return -1;
 		}
 
-		if((time_end - time_start_receive) >= 2000)
+		if((time_end - time_start_receive) >= 3000)
 		{
 			free(tmp_buf);
 			return ERRTIMEOUT;
 		}
 
 		readlenth = serialport_read(fdport, tmp_buf + readTotalLen , data_len - readTotalLen,0) ;
+		if(cancel_flag ==1)
+		{
+			return -1;
+		}
 		if(readlenth <= 0)
 		{
 			usleep(1000);
@@ -560,7 +595,7 @@ err_out:
 int libid2_reset(void)
 {
 	struct timeval t_start;
-	if((fdport <=0) || (libid2_get_power_state() != 3))
+	if((fdport <=0) || (libid2_get_power_state() != 1))
 	{
 		printf("fdport not open or power is off \n");
 		return -1;
@@ -605,6 +640,41 @@ static int power_opt(int action,int option)
 	return 3;
 }
 #endif
+static int read_attr_file( const char* file, int* pResult)
+{
+	int fd = -1;
+	fd = open( file, O_RDONLY );
+	if( fd >= 0 ){
+		char buf[20];
+		int rlt = read( fd, buf, sizeof(buf) );
+		if( rlt >= 0 ){
+			buf[rlt] = '\0';
+			*pResult = atoi(buf);
+			close(fd);
+			return 0;
+		}
+		close(fd);
+		return -1;
+	}
+	return -1;
+}
+
+
+static int write_attr_file(const char* path,int val)
+{
+	int fd,nwr;
+	char value[20]; 			
+	fd = open(path, O_RDWR);
+ 	if(fd<0) return -1;
+	
+	nwr = sprintf(value, "%d\n", val);
+	write(fd, value, nwr);
+	close(fd);		
+
+	return 0;
+
+}
+
 
 /*
  * return value:
@@ -616,12 +686,12 @@ int libid2_power(int on_off)
 
 	if(1 == on_off)
 	{
-		power_opt(2,0);
+		write_attr_file(ATTR_POWER,1);
 		//printf(" power on\n");
 	}
 	else if(0 == on_off)
 	{
-		power_opt(3,0);//off
+		write_attr_file(ATTR_POWER,0);//off
 	}
 	else 
 	{
@@ -643,7 +713,14 @@ int libid2_power(int on_off)
 
 int libid2_get_power_state(void)
 {
-	return power_opt(1,0);
+	int  pResult = 0;
+	read_attr_file( ATTR_POWER, &pResult);
+	if(pResult == 1)
+	{
+		return 1;
+	}
+	//always return 1 for test
+	return 1/*0*/;
 }
 
 static int check_id2_info(char *id2info)
@@ -694,6 +771,50 @@ int libid2_decode_info(char *id2infobuf,int length,ID2Info * info)
 
 	return 0;
 }
+
+int libid2_decode_image(char *decodebuf)
+{
+	int ret;
+	void *handle;//
+	typedef int(*FuncPtr)(char *,int);
+	const char fso[]="libwltu.so";
+
+	if(decodebuf == NULL)
+	{
+		return -1;
+	}
+	
+	FILE *file = fopen(FILENAME_ID2,"wb");
+	if(file ==  NULL)
+	{
+		printf("open filed \n");
+		return -1;
+	}
+	
+	fwrite(decodebuf,1,1024,file);
+	fclose(file);
+
+	//extern int GetBmp(char *filename, int intf);
+
+	//GetBmp(FILENAME_ID2, 1);
+	handle = dlopen(fso, RTLD_NOW);
+
+	if( handle == NULL )
+	{
+		printf("dlerror %s :\n", dlerror());//
+		return -1;
+	}
+	// fun1 = dlsym(handle, "GetBmp" );
+	FuncPtr fun1=(FuncPtr)dlsym(handle,"GetBmp");
+	ret  =(*fun1)(FILENAME_ID2,1);
+	//should close dl handle
+	dlclose(handle);
+	return ret;
+	
+}
+
+
+
 
 int BCD2ASCII(const unsigned char* bcd, int bcdLen,unsigned char* ascii )
 {
@@ -786,6 +907,10 @@ int ASCII2BCD(const unsigned char* ascii, unsigned char* bcd,int *bcdLen )
 	return 0;
 }
 
+/*
+*   the DelayTime is the time out time ,Unit ms aCardType is the card type the restult is 0x0a,0x0b,0x0c.
+*   cardID is card id,the conetent have 4 bytes; the usr must malloc 4 bytes or more;
+*/
 
 int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 {
@@ -802,9 +927,9 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 	
 	struct timeval t_time; 
 	long time_start= 0,time_end =0; //ms
+	cancel_flag = 0;
 
-
-	if((fdport <=0) || (libid2_get_power_state() != 3))
+	if((fdport <=0) || (libid2_get_power_state() != 1))
 	{
 		printf("fdport not open or power is off \n");
 		return -1;
@@ -871,8 +996,12 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 		
 		gettimeofday(&t_time, NULL); 
 		time_end = ((long)t_time.tv_sec)*1000+(long)t_time.tv_usec/1000; 
+		if(cancel_flag ==1)
+		{
+			return -1;
+		}
 		//printf("readlenth = %d \n",totallenth);
-		if((time_end - time_start) > DelayTime)
+		if((time_end - time_start) > (DelayTime+1000))
 		{
 			printf("time out \n ");
 			return -1;
@@ -896,7 +1025,7 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 	if(recbuf[3] == 0x0 && recbuf[4] == 0x0 && recbuf [totallenth -1] == 0x03)
 	{
 		*aCardType = recbuf[5];
-		BCD2ASCII(&recbuf[6],4,tempstr );
+		BCD2ASCII((unsigned char*)&recbuf[6],4,(unsigned char*)tempstr );
 
 		strcpy(CardId,tempstr);
 		return 0;

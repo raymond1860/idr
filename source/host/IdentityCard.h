@@ -79,12 +79,14 @@ int libid2_reset(void);
  *     3 - STATE_WORKINGl
  *
  */
-
+void libid2_cancel_read_id2(void);
 int libid2_get_power_state(void);
 
 int libid2_decode_info(char *id2infobuf,int length,ID2Info *info);
 
-int libid2_getICCard(int DelayTime,int * aCardType,char * CardId);
+int libid2_decode_image(char *decodebuf);
+
+int libid2_getICCard(int DelayTime,int * aCardType,char* CardId);
 
 
 #ifdef __cplusplus
