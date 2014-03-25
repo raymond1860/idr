@@ -32,8 +32,9 @@ int uart_cli_loop(const char* dev){
         // Display the usage
         printf("\n*******************************************\n");
         printf("Commands:\n"
-        "Quit         ---quit\n"        
-        "Read         ---read card\n"                		
+        "Quit         ---quit\n"
+		"reset        ---reset sam\n"        
+        "info         ---read card info\n"                		
         "SAMid        ---get card samid\n"
 		"ICCid        ---get icc card type and id\n"
          "*******************************************\n\n");
@@ -56,7 +57,16 @@ int uart_cli_loop(const char* dev){
 			if(!strncmp(_argv[0],"quit",1)){
 	            printf("Quit...\n");
 	            exit=1;
-	        }else if(!strncmp(_argv[0],"read",1)){	    
+	        }else if(!strncmp(_argv[0],"reset",5)){
+	        	err = libid2_open(dev);
+				if(err){
+					printf("open libid2 failed\n");
+				}else{
+					ret=libid2_reset();
+					printf("reset sam %s\n",ret<0?"failed":"okay");
+					libid2_close();
+				}
+	        }else if(!strncmp(_argv[0],"info",4)){	    
 				int retlength;
 				err = libid2_open(dev);
 				if(err){
