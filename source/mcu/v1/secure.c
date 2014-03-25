@@ -7,6 +7,7 @@
 #include "STC15F2K08S2.h"
 #include <intrins.h>
 #include "secure.h"
+#include "common.h"
 
 /*
 #define TX_FRAME   P2_6
@@ -78,9 +79,17 @@ unsigned char  read_sec(unsigned char idata * dat)
 {
 	unsigned char temp,len;
 	len =0;
+	temp=0;
+	// 等待接收数据 because some commands may handled by SAM itself,
+	//we just wait a litte time out here
+	while(TX_FRAME==0) {
+		Delay1ms();
+		if(++temp==200) return 0;
+	}
+
+	//once TX_FRAME is high,we should disable interrutp to simulate i2c xfer
 	EA = 0;
-	// 等待接收数据
-	while(TX_FRAME==0);	   
+
     while (SCLK);
 	// 开始接收数据,因接收数据较快,所以采用每个bit 顺序接收,未采用循环的方法
 	while (TX_FRAME)

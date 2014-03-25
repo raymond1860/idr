@@ -7,19 +7,19 @@
 #include "packet.h"
 #include "thm3060.h"
 
-#define HEART_BEAT P20
 
-#define MAX_BUFSIZE 120
+//#define UART_DEBUGGING
 
-unsigned char xdata comm_buffer[64],comm_buffer2[64];	
+#define MAX_BUFSIZE 128
+
+unsigned char xdata comm_buffer[64];	
 
 
 void SAM_packet_handler(uint8* buf,int size);
 void PRIVATE_packet_handler(uint8* buf,int size);
 void Delay1ms()		//@27MHz
 {
-	unsigned char i, j;
-
+	unsigned char i, j;	
 	i = 27;
 	j = 64;
 	do
@@ -59,8 +59,8 @@ void main(void)
 	unsigned char idata buf[MAX_BUFSIZE];
 	int len; 	
 	unsigned char prot;
-	GenPacket p;
 	uint8 i;
+
 	#ifdef HEART_BEAT
 	i=3;
 	while(i-->0){
@@ -71,14 +71,16 @@ void main(void)
 	}
 	#endif
 	init_i2c();
+	#ifndef UART_DEBUGGING
 	uart1_init();
+	#endif
 	uart2_init();
-	AUXR = 0x00;	
     reset_prf();				//SPI 模式芯片复位
     write_reg(TMRL,0x08);    	//设置最大响应时间,单位302us
 
 	while(1)
- 	{   	
+ 	{   
+	  #ifndef UART_DEBUGGING
 	  //step 1:read uart1 
 	  len = uart1_read(buf,MAX_BUFSIZE);
 
@@ -94,10 +96,36 @@ void main(void)
 		 DelayMs(100);
 		 #endif
 		 continue;
+	  }else {
+  	  	 #ifdef HEART_BEAT
+		 HEART_BEAT=0;
+		 #endif
 	  }
-	  p.pbuf = buf;
-	  p.plen = len;
-	  prot = packet_protocol(&p);
+	  #else
+	  //just write test command to sam
+
+	  //only for test
+	  buf[0]=0xAA; buf[1]=0xAA;  buf[2]=0xAA;  buf[3]=0x96;  buf[4]=0x69;
+
+	  //SAM packet	  
+
+	  //reset sam or rf?
+	  //buf[5]=0x00;buf[6]=0x03; buf[7]=0x10; buf[8]=0xff; buf[9]=0xec; len = 10;
+	  //get sam id
+	  buf[5]=0x00;buf[6]=0x03; buf[7]=0x12; buf[8]=0xff; buf[9]=0xee; len = 10;
+	  //find card
+	  //buf[5]=0x00;buf[6]=0x03; buf[7]=0x20; buf[8]=0x01; buf[9]=0x22; len = 10;
+	  //select card
+	  //buf[5]=0x00;buf[6]=0x03; buf[7]=0x20; buf[8]=0x02; buf[9]=0x21; len = 10;
+	  //read card
+	  //buf[5]=0x00;buf[6]=0x03; buf[7]=0x30; buf[8]=0x01; buf[9]=0x32; len = 10;
+
+	  //vendor private packet
+	  //buf[0]=0x2;buf[1]=0x00;buf[2]=0x04;buf[3]=0x32;buf[4]=0x41;buf[5]=0x03;buf[6]=0xe8;buf[7]=0x98;buf[8]=0x03;len=9;
+
+	  #endif
+
+	  prot = packet_protocol(buf,len);
 	  //step 3:command dispatch
 	  //secure card command 
 	  //read prf command
@@ -114,13 +142,19 @@ void main(void)
   	}  	 
 }
 
+/*
+ * We must parse SAM packet to decide whether we should 
+ read SAM or not
+*/
 
 void SAM_packet_handler(uint8* buf,int size){
 	unsigned char len;
 	unsigned char i;
 	uart2_write(buf,size);
+	/*
 	//reuse buf;
 	len= read_sec(buf); 	 			//读加密模块
+	
 	if (len!=0)
 	{
 		if (buf[0]==0x05)
@@ -140,14 +174,21 @@ void SAM_packet_handler(uint8* buf,int size){
 			    
 	        write_sec(buf,len);			 //写加密模块
 	}
-
+	*/
 	//read from uart2 (for SAM return)
 	//and write it to uart1
 	do {
-		DelayMs(10);//fine tune?
+		DelayMs(100);//fine tune?
     	len = uart2_read(buf,MAX_BUFSIZE);
+		#ifndef UART_DEBUGGING
 		if(len>0)
 			uart1_write(buf,len);
+		#endif
+		#ifdef HEART_BEAT
+		HEART_BEAT=0;
+		DelayMs(100);
+		HEART_BEAT=1;
+		#endif
 	}while(len>0);
 
 }
@@ -171,9 +212,7 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 					 * ANSWER:|STATUS_CODE[2]|TYPE[1](0x0A->Type A,0x0B Type B)|UID[4]|
 					*/
 					int plen;
-					uint8 anti_flag;
 					uint16 delaytime_ms = (cmd_buf[2]<<8)+cmd_buf[3]; 
-					uint16 uid_len=0;
 					uint16 *sw;
 					//step down delay time to meet host requirement
 					if(delaytime_ms!=0xffff) delaytime_ms--;
@@ -181,18 +220,15 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 					close_prf();DelayMs(5);
 					open_prf();	DelayMs(5);
 					do {
-						ret = THM_Anticollision2(&anti_flag,&uid_len,comm_buffer);  
-					}while(!ret&&(delaytime_ms>0));
+						ret = THM_Anticollision(&comm_buffer[3]);  
+					}while((0!=ret)&&(1!=ret)&&(delaytime_ms>0));
 
 					//prepare answer payload
-					sw = (unsigned short*)&comm_buffer2[0];
+					sw = (unsigned short*)&comm_buffer[0];
 					*sw = (!ret)?STATUS_CODE_CARD_NOT_ANSWERED:STATUS_CODE_SUCCESS;
-					comm_buffer2[2] = (ret)?0x0A:0x00;
-					if(uid_len>0)
-						memcpy(&comm_buffer2[3],comm_buffer,uid_len);
-
+					comm_buffer[2] = (2==ret)?0x00:0x0A;
 					//setup answer packet now
-					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer2,uid_len+3);
+					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer,7);
 
 					//send answer packet to uart1
 					uart1_write(buf,plen); 

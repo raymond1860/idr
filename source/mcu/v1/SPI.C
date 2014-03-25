@@ -27,21 +27,13 @@
 
 
 // 此处用户可以根据自己应用进行修改
-/*
-#define SS_N       P1_0
-#define SPI_CLK    P1_1	   
-#define MOSI	   P1_2
-#define MISO       P1_3
-#define POR        P1_5	   
-*/
-//changed for idr board
-#define SS_N       P33
-#define SPI_CLK    P34	   
-#define MOSI	   P35
-#define MISO       P36
+#define SS_N       P12
+#define MOSI	   P13
+#define MISO       P14
+#define SPI_CLK    P15	   
 //no POR on idr board
 //#define POR        P1_5	   
-#define STANDBY		P22
+#define STANDBY		P20
 
 
 //SPI 模式芯片复位

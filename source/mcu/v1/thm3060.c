@@ -48,7 +48,7 @@ extern unsigned char THM_ReadReg(unsigned char address)
 
 									
 
-#if 0
+#if 1
 //Function: Change to THM3060 to TypeA Mode and Anticollision Loop 
 //Parameter: OUT b_uid, card's UID , 4 bytes
 //Return value:   00    OK,a card selected and it is the last card
@@ -115,7 +115,7 @@ unsigned char THM_Anticollision(unsigned char * b_uid)
 	return 0x2;
     
 }    
-#endif
+#else
 //Function: Change to THM3060 to TypeA Mode and Anticollision Loop 
 //Parameter: OUT b_uid, card's UID , 4 bytes
 //Return value:   00    eror,
@@ -315,6 +315,7 @@ unsigned char THM_Anti(unsigned char cmm_head , unsigned short * uid_len,unsigne
 	return 0x0;
 }
 
+#endif
 
 	   
     

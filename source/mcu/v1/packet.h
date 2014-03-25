@@ -11,12 +11,8 @@
 #define PPROT_SAM		0
 #define PPROT_PRIV		1
 
-typedef struct st_general_packet{
-	char* pbuf;
-	int plen;
-}GenPacket;
 
-int packet_protocol(GenPacket* p);
+int packet_protocol(unsigned char* buf,unsigned int len);
 
 //Vendor private definition
 #define VENDOR_PACKET_PREFIX 0x02

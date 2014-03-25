@@ -18,24 +18,22 @@
  * ETX	-->0x03
 */
 static  uint8 checksum(uint8* start,int size){
-	uint8 xor=0;
+	uint8 crc8=0;
 	int i;
 	for ( i = 0 ; i < size ; i ++ ) {
-   		xor = xor ^ start[i];
+   		crc8 = crc8 ^ start[i];
 	}
-	return xor;
+	return crc8;
 }
 
 
 //with less security checking???
-int packet_protocol(GenPacket* p){
-	uint8* buf = p->pbuf;
-	unsigned int payload_len;
+int packet_protocol(unsigned char* buf,unsigned int len){
 	//check header
-	if(p->plen<3) return PERR_INVALID;
+	if(len<3) return PERR_INVALID;
 	if(0x02==buf[0]){
-	    payload_len = (buf[1]<<8)+buf[2];
-		if(payload_len!=(p->plen-5)){
+	    uint8 payload_len = (buf[1]<<8)+buf[2];
+		if(payload_len!=(len-5)){
 		    return PERR_INVALID;
 		}
 		if(buf[4+payload_len]!=0x03)
