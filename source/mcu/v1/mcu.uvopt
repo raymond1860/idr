@@ -217,10 +217,10 @@
       <FileType>1</FileType>
       <tvExp>1</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>18</ColumnNumber>
+      <ColumnNumber>52</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>78</TopLine>
-      <CurrentLine>95</CurrentLine>
+      <TopLine>49</TopLine>
+      <CurrentLine>71</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\mcumain.c</PathWithFileName>
       <FilenameWithoutPath>mcumain.c</FilenameWithoutPath>
@@ -228,9 +228,165 @@
   </Group>
 
   <AlienFiles>
-    <PathWithFilename>E:\projects\xh\idr\source\mcu\v1\mcumain.c</PathWithFilename>
-    <TopLine>1</TopLine>
-    <CurrentLine>6</CurrentLine>
+    <PathWithFilename>E:\projects\xh\idr\source\mcu\v1\STC15F2K08S2.H</PathWithFilename>
+    <TopLine>130</TopLine>
+    <CurrentLine>142</CurrentLine>
+    <Constant>0</Constant>
+    <WindowPosition>
+      <length>0</length>
+      <flags>0</flags>
+      <showCmd>0</showCmd>
+      <MinPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MinPosition>
+      <MaxPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MaxPosition>
+      <NormalPosition>
+        <Top>0</Top>
+        <Left>0</Left>
+        <Right>0</Right>
+        <Bottom>0</Bottom>
+      </NormalPosition>
+    </WindowPosition>
+  </AlienFiles>
+
+  <AlienFiles>
+    <PathWithFilename>E:\projects\xh\idr\source\mcu\v1\PACKET.C</PathWithFilename>
+    <TopLine>34</TopLine>
+    <CurrentLine>55</CurrentLine>
+    <Constant>0</Constant>
+    <WindowPosition>
+      <length>0</length>
+      <flags>0</flags>
+      <showCmd>0</showCmd>
+      <MinPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MinPosition>
+      <MaxPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MaxPosition>
+      <NormalPosition>
+        <Top>0</Top>
+        <Left>0</Left>
+        <Right>0</Right>
+        <Bottom>0</Bottom>
+      </NormalPosition>
+    </WindowPosition>
+  </AlienFiles>
+
+  <AlienFiles>
+    <PathWithFilename>E:\projects\xh\idr\source\mcu\v1\COMMON.H</PathWithFilename>
+    <TopLine>28</TopLine>
+    <CurrentLine>48</CurrentLine>
+    <Constant>0</Constant>
+    <WindowPosition>
+      <length>0</length>
+      <flags>0</flags>
+      <showCmd>0</showCmd>
+      <MinPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MinPosition>
+      <MaxPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MaxPosition>
+      <NormalPosition>
+        <Top>0</Top>
+        <Left>0</Left>
+        <Right>0</Right>
+        <Bottom>0</Bottom>
+      </NormalPosition>
+    </WindowPosition>
+  </AlienFiles>
+
+  <AlienFiles>
+    <PathWithFilename>E:\projects\xh\idr\source\mcu\v1\secure.c</PathWithFilename>
+    <TopLine>78</TopLine>
+    <CurrentLine>87</CurrentLine>
+    <Constant>0</Constant>
+    <WindowPosition>
+      <length>0</length>
+      <flags>0</flags>
+      <showCmd>0</showCmd>
+      <MinPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MinPosition>
+      <MaxPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MaxPosition>
+      <NormalPosition>
+        <Top>0</Top>
+        <Left>0</Left>
+        <Right>0</Right>
+        <Bottom>0</Bottom>
+      </NormalPosition>
+    </WindowPosition>
+  </AlienFiles>
+
+  <AlienFiles>
+    <PathWithFilename>E:\projects\xh\idr\source\mcu\v1\SPI.C</PathWithFilename>
+    <TopLine>195</TopLine>
+    <CurrentLine>208</CurrentLine>
+    <Constant>0</Constant>
+    <WindowPosition>
+      <length>0</length>
+      <flags>0</flags>
+      <showCmd>0</showCmd>
+      <MinPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MinPosition>
+      <MaxPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MaxPosition>
+      <NormalPosition>
+        <Top>0</Top>
+        <Left>0</Left>
+        <Right>0</Right>
+        <Bottom>0</Bottom>
+      </NormalPosition>
+    </WindowPosition>
+  </AlienFiles>
+
+  <AlienFiles>
+    <PathWithFilename>E:\projects\xh\idr\source\mcu\v1\uart.c</PathWithFilename>
+    <TopLine>43</TopLine>
+    <CurrentLine>43</CurrentLine>
+    <Constant>0</Constant>
+    <WindowPosition>
+      <length>0</length>
+      <flags>0</flags>
+      <showCmd>0</showCmd>
+      <MinPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MinPosition>
+      <MaxPosition>
+        <xPos>0</xPos>
+        <yPos>0</yPos>
+      </MaxPosition>
+      <NormalPosition>
+        <Top>0</Top>
+        <Left>0</Left>
+        <Right>0</Right>
+        <Bottom>0</Bottom>
+      </NormalPosition>
+    </WindowPosition>
+  </AlienFiles>
+
+  <AlienFiles>
+    <PathWithFilename>E:\projects\xh\idr\source\mcu\v1\main.c</PathWithFilename>
+    <TopLine>169</TopLine>
+    <CurrentLine>183</CurrentLine>
     <Constant>0</Constant>
     <WindowPosition>
       <length>0</length>
@@ -1598,15 +1754,45 @@
       <Documents>
         <Doc>
           <Name>E:\projects\xh\idr\source\mcu\v1\main.c</Name>
-          <ColumnNumber>40</ColumnNumber>
-          <TopLine>118</TopLine>
-          <CurrentLine>136</CurrentLine>
+          <ColumnNumber>47</ColumnNumber>
+          <TopLine>169</TopLine>
+          <CurrentLine>183</CurrentLine>
         </Doc>
         <Doc>
           <Name>E:\projects\xh\idr\source\mcu\v1\uart.c</Name>
-          <ColumnNumber>35</ColumnNumber>
-          <TopLine>25</TopLine>
-          <CurrentLine>25</CurrentLine>
+          <ColumnNumber>26</ColumnNumber>
+          <TopLine>43</TopLine>
+          <CurrentLine>43</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>E:\projects\xh\idr\source\mcu\v1\SPI.C</Name>
+          <ColumnNumber>28</ColumnNumber>
+          <TopLine>195</TopLine>
+          <CurrentLine>208</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>E:\projects\xh\idr\source\mcu\v1\secure.c</Name>
+          <ColumnNumber>15</ColumnNumber>
+          <TopLine>78</TopLine>
+          <CurrentLine>87</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>E:\projects\xh\idr\source\mcu\v1\COMMON.H</Name>
+          <ColumnNumber>24</ColumnNumber>
+          <TopLine>28</TopLine>
+          <CurrentLine>48</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>E:\projects\xh\idr\source\mcu\v1\PACKET.C</Name>
+          <ColumnNumber>19</ColumnNumber>
+          <TopLine>34</TopLine>
+          <CurrentLine>55</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>E:\projects\xh\idr\source\mcu\v1\STC15F2K08S2.H</Name>
+          <ColumnNumber>7</ColumnNumber>
+          <TopLine>130</TopLine>
+          <CurrentLine>142</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>

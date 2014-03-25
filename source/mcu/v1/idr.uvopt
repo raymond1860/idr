@@ -130,6 +130,23 @@
           <Name>-S34 -B115200 -O0 -U0</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
+      <Breakpoint>
+        <Bp>
+          <Number>0</Number>
+          <Type>0</Type>
+          <LineNumber>145</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>-16774753</Address>
+          <ByteObject>0</ByteObject>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression></Expression>
+        </Bp>
+      </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
@@ -212,10 +229,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>47</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>1</TopLine>
-      <CurrentLine>1</CurrentLine>
+      <TopLine>169</TopLine>
+      <CurrentLine>183</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\main.c</PathWithFileName>
       <FilenameWithoutPath>main.c</FilenameWithoutPath>
@@ -226,7 +243,7 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>16</ColumnNumber>
+      <ColumnNumber>15</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
       <TopLine>78</TopLine>
       <CurrentLine>87</CurrentLine>
@@ -252,12 +269,12 @@
       <GroupNumber>2</GroupNumber>
       <FileNumber>5</FileNumber>
       <FileType>1</FileType>
-      <tvExp>0</tvExp>
+      <tvExp>1</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>2</ColumnNumber>
+      <ColumnNumber>26</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>34</TopLine>
-      <CurrentLine>52</CurrentLine>
+      <TopLine>43</TopLine>
+      <CurrentLine>43</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\uart.c</PathWithFileName>
       <FilenameWithoutPath>uart.c</FilenameWithoutPath>
@@ -268,10 +285,10 @@
       <FileType>1</FileType>
       <tvExp>0</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>0</ColumnNumber>
+      <ColumnNumber>19</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>38</TopLine>
-      <CurrentLine>44</CurrentLine>
+      <TopLine>34</TopLine>
+      <CurrentLine>55</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\packet.c</PathWithFileName>
       <FilenameWithoutPath>packet.c</FilenameWithoutPath>
@@ -1696,19 +1713,19 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>4</ActiveTab>
+      <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
           <Name>.\main.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>1</TopLine>
-          <CurrentLine>1</CurrentLine>
+          <ColumnNumber>47</ColumnNumber>
+          <TopLine>169</TopLine>
+          <CurrentLine>183</CurrentLine>
         </Doc>
         <Doc>
           <Name>.\uart.c</Name>
-          <ColumnNumber>2</ColumnNumber>
-          <TopLine>34</TopLine>
-          <CurrentLine>52</CurrentLine>
+          <ColumnNumber>26</ColumnNumber>
+          <TopLine>43</TopLine>
+          <CurrentLine>43</CurrentLine>
         </Doc>
         <Doc>
           <Name>.\SPI.C</Name>
@@ -1718,15 +1735,27 @@
         </Doc>
         <Doc>
           <Name>.\secure.c</Name>
-          <ColumnNumber>16</ColumnNumber>
+          <ColumnNumber>15</ColumnNumber>
           <TopLine>78</TopLine>
           <CurrentLine>87</CurrentLine>
         </Doc>
         <Doc>
           <Name>COMMON.H</Name>
-          <ColumnNumber>28</ColumnNumber>
-          <TopLine>1</TopLine>
-          <CurrentLine>5</CurrentLine>
+          <ColumnNumber>24</ColumnNumber>
+          <TopLine>28</TopLine>
+          <CurrentLine>48</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>.\packet.c</Name>
+          <ColumnNumber>19</ColumnNumber>
+          <TopLine>34</TopLine>
+          <CurrentLine>55</CurrentLine>
+        </Doc>
+        <Doc>
+          <Name>STC15F2K08S2.H</Name>
+          <ColumnNumber>7</ColumnNumber>
+          <TopLine>130</TopLine>
+          <CurrentLine>142</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
