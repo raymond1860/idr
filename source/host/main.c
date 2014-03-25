@@ -89,9 +89,8 @@ int uart_cli_loop(const char* dev){
 				if(err){
 					printf("open libid2 failed\n");
 				}else {
-					if(!libid2_getsamid(buf,&samlength,5)){
-						printf("samid return %d\n",samlength);					
-						dump("samid",buf,samlength);
+					if(!libid2_getsamid(buf,&samlength,5/*timeout*/)){
+						printf("samid[%s]\n",buf);
 					}else {
 						printf("get samid failed\n");
 					}

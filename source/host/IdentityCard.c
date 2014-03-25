@@ -1,7 +1,7 @@
 #include "platform.h"
 #include "IdentityCard.h" 
 
-#define DEBUG 1
+#define DEBUG 0
 
 static long  time_start =0;
 
