@@ -217,10 +217,10 @@
       <FileType>1</FileType>
       <tvExp>1</tvExp>
       <Focus>0</Focus>
-      <ColumnNumber>12</ColumnNumber>
+      <ColumnNumber>18</ColumnNumber>
       <tvExpOptDlg>0</tvExpOptDlg>
-      <TopLine>42</TopLine>
-      <CurrentLine>59</CurrentLine>
+      <TopLine>78</TopLine>
+      <CurrentLine>95</CurrentLine>
       <bDave2>0</bDave2>
       <PathWithFileName>.\mcumain.c</PathWithFileName>
       <FilenameWithoutPath>mcumain.c</FilenameWithoutPath>
@@ -1594,37 +1594,19 @@
     <ActiveMDIGroup>0</ActiveMDIGroup>
     <MDIGroup>
       <Size>100</Size>
-      <ActiveTab>1</ActiveTab>
+      <ActiveTab>0</ActiveTab>
       <Documents>
         <Doc>
           <Name>E:\projects\xh\idr\source\mcu\v1\main.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>115</TopLine>
-          <CurrentLine>120</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>E:\projects\xh\idr\source\mcu\v1\packet.c</Name>
-          <ColumnNumber>15</ColumnNumber>
-          <TopLine>19</TopLine>
-          <CurrentLine>25</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>E:\projects\xh\idr\source\mcu\v1\COMMON.H</Name>
-          <ColumnNumber>28</ColumnNumber>
-          <TopLine>1</TopLine>
-          <CurrentLine>5</CurrentLine>
-        </Doc>
-        <Doc>
-          <Name>E:\projects\xh\idr\source\mcu\v1\PACKET.H</Name>
-          <ColumnNumber>28</ColumnNumber>
-          <TopLine>1</TopLine>
-          <CurrentLine>1</CurrentLine>
+          <ColumnNumber>40</ColumnNumber>
+          <TopLine>118</TopLine>
+          <CurrentLine>136</CurrentLine>
         </Doc>
         <Doc>
           <Name>E:\projects\xh\idr\source\mcu\v1\uart.c</Name>
-          <ColumnNumber>0</ColumnNumber>
-          <TopLine>131</TopLine>
-          <CurrentLine>135</CurrentLine>
+          <ColumnNumber>35</ColumnNumber>
+          <TopLine>25</TopLine>
+          <CurrentLine>25</CurrentLine>
         </Doc>
       </Documents>
     </MDIGroup>
