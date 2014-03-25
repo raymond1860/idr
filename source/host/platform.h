@@ -45,7 +45,15 @@ typedef int bool;
 #endif
 
 
+//dynamic library loading
+void* LoadSharedLibrary(const char* path,int flags);
+void ReleaseSharedLibrary(void* handle);
+void* LoadSymbol(void* handle,const char* symbol);
+
+//utility
 void dump(const char *prefix,const unsigned char *data ,int size);
+
+/*serial port API*/
 
 int serialport_open(const char* name);
 

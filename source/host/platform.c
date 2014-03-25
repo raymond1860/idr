@@ -221,6 +221,16 @@ int serialport_config(int fd,int baudrate,int databits,int stopbits,int parity)
      return 0;
 
 }
+#warning "FIXME:loading dynamic library on windows"
+void* LoadSharedLibrary(const char* path,int flags){
+	return 0;
+}
+void ReleaseSharedLibrary(void* handle){
+	
+}
+void* LoadSymbol(void* handle,const char* symbol){
+	return 0;
+}
 #elif defined(__linux__)
 #define DEF_SERIALPORT "/dev/ttyS1"
 int serialport_open2(const char* name,int flags){
@@ -419,6 +429,15 @@ int serialport_config(int fd,int baudrate,int databits,int stopbits,int parity)
 
 }
 
+void* LoadSharedLibrary(const char* path,int flags){
+	return dlopen(path,flags);
+}
+void ReleaseSharedLibrary(void* handle){
+	dlclose(handle);
+}
+void* LoadSymbol(void* handle,const char* symbol){
+	return dlsym(handle,symbol);
+}
 
 #else
 #error "unknown platform"

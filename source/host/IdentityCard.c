@@ -797,18 +797,24 @@ int libid2_decode_image(char *decodebuf)
 	//extern int GetBmp(char *filename, int intf);
 
 	//GetBmp(FILENAME_ID2, 1);
-	handle = dlopen(fso, RTLD_NOW);
+	#if defined(_WIN32)
+	handle = LoadSharedLibrary(fso, 0);
+ 	#elif defined(__linux__ )
+	handle = LoadSharedLibrary(fso, RTLD_NOW);
+	#else
+	#error "unsupported platform"
+	#endif
 
 	if( handle == NULL )
 	{
-		printf("dlerror %s :\n", dlerror());//
+		printf("loading library %s failed\n",fso);//
 		return -1;
 	}
 	// fun1 = dlsym(handle, "GetBmp" );
-	FuncPtr fun1=(FuncPtr)dlsym(handle,"GetBmp");
+	FuncPtr fun1=(FuncPtr)LoadSymbol(handle,"GetBmp");
 	ret  =(*fun1)(FILENAME_ID2,1);
 	//should close dl handle
-	dlclose(handle);
+	ReleaseSharedLibrary(handle);
 	return ret;
 	
 }
