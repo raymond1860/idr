@@ -1,5 +1,9 @@
 # Object files
 *.o
+*.obj
+*.OBJ
+*.lst
+*.LST
 
 # Libraries
 *.lib
@@ -15,3 +19,6 @@
 *.exe
 *.out
 *.app
+
+*.bak
+Thumbs.db
