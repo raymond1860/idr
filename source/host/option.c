@@ -21,7 +21,10 @@ argv_dispose()
 		free(_argv[_argc-1]);
 		_argc--;
 	}
-	free(_argv_token);
+	if(_argv_token){
+		free(_argv_token);
+		_argv_token=NULL;
+	}
 }
 
 

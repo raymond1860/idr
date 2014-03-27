@@ -52,6 +52,8 @@ static struct cmd_list {
 	{CMD_READ_CARD, "\xAA\xAA\xAA\x96\x69\x00\x03\x30\x01\x32", NULL},
 	{CMD_GET_ICCARD, "\xAA\xAA\xAA\x96\x69\x00\x03\x30\x01\x32", NULL},
 };
+#undef SUCCESSED
+#undef FAILED
 
 #define   BAUDRATE    115200
 #define   SUCCESSED     0
@@ -114,7 +116,7 @@ static int receive_buff(int cmd_index, char *buff,int *bufflenth ,int time_out)
 		ret =  send_cmd(cmd_index);
 		if(-1 == ret)
 		{
-			usleep(1000);;
+			usleep(1000);
 			return -1;
 		}
 		
@@ -797,13 +799,7 @@ int libid2_decode_image(char *decodebuf)
 	//extern int GetBmp(char *filename, int intf);
 
 	//GetBmp(FILENAME_ID2, 1);
-	#if defined(_WIN32)
 	handle = LoadSharedLibrary(fso, 0);
- 	#elif defined(__linux__ )
-	handle = LoadSharedLibrary(fso, RTLD_NOW);
-	#else
-	#error "unsupported platform"
-	#endif
 
 	if( handle == NULL )
 	{

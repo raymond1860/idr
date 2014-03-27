@@ -1,9 +1,104 @@
 #include "platform.h"
 #include "option.h"
 #include "IdentityCard.h"
+#include "download.h"
+#include "packet.h"
 
+struct cli_menu;
+typedef int (*menu_func)(struct cli_menu* cli);
+typedef struct cli_menu{
+	struct cli_menu* parent;
+	struct cli_menu* children;
+	struct cli_menu* sibling;
+	char* menuname;
+	menu_func func;
+}cli_menu;
 
+typedef struct cli_menu_shared{
+	char* devname;
+	int  baudrate;
+}cli_menu_shared;
 
+static cli_menu_shared shared;
+
+static cli_menu menu_top;
+static cli_menu menu_sam;
+static cli_menu menu_mcu;
+
+static void init_menu(cli_menu* parent,cli_menu* menu,char* menuname,menu_func func){
+	cli_menu* it;
+	if(NULL!=parent->children){
+		it=parent->children;
+		while(NULL!=it->sibling) it=it->sibling;
+		it->sibling = menu;
+	}else
+		parent->children = menu;
+
+	menu->parent = parent;
+	menu->func = func;
+	menu->menuname = menuname;
+	menu->children=menu->sibling=NULL;
+}
+
+static int exec_menu(cli_menu* cli,char* shoot){
+	cli_menu* it=cli;
+	if(NULL!=it->children){
+		it=it->children;
+		if(!strcmp(it->menuname,shoot))
+			return it->func(it);		
+		it = it->sibling;
+		while(NULL!=it){
+			if(!strcmp(it->menuname,shoot))
+				return it->func(it);
+			it = it->sibling;
+		}
+	}
+	return 0;
+}
+
+static void show_menu_help(cli_menu* cli,char* help){
+	char* menu_helps[16];
+	int menu_level=0;
+	cli_menu* it=cli;
+	memset(menu_helps,0,sizeof(menu_helps)/sizeof(menu_helps[0]));
+	//iterate to top
+	do{
+		if(it->menuname)
+			menu_helps[menu_level++]=it->menuname;
+		it = it->parent;
+	}while(it);
+	printf("\n\n");
+	for(;menu_level>0;menu_level--){
+		printf("\%s",menu_helps[menu_level-1]);
+	}
+	printf("\n*******************************************\n");
+	printf("Available Commands:\n"
+		"quit               ---exit whole program\n"
+		"exit               ---exit whole program\n");
+	if(cli->parent)
+		printf("back                ---back to parent menu\n");	
+	printf("\n*******************************************\n");
+	//show sub menus
+	it = cli;
+	if(NULL!=it->children){
+		it=it->children;		
+		if(it->menuname)
+			printf("%s                ---Enter sub menu %s\n",it->menuname,it->menuname);
+		it = it->sibling;
+		while(NULL!=it){
+			if(it->menuname)
+				printf("%s                ---Enter sub menu %s\n",it->menuname,it->menuname);
+			it = it->sibling;
+		}
+	}
+	
+	//print current menu help
+	if(help)
+		printf("%s",help);
+
+	//print prompt
+	printf("\n\n>");
+}
 
 static void dump_id2_info(ID2Info* info){
 	printf("=====Dump ID2 info=====\n");
@@ -18,8 +113,7 @@ static void dump_id2_info(ID2Info* info){
 	dump("period_end",info->period_end,16);
 }
 
-
-int uart_cli_loop(const char* dev){
+int cli_loop_mcu(cli_menu* cli){
 	static char cmd[1024]; 
 	static char buf[2048];
 	int exit=0;
@@ -28,19 +122,14 @@ int uart_cli_loop(const char* dev){
 	int cmd_len,i;	
 	int err;
 	char* cmdptr;
+	const char* dev = shared.devname;
     while (!exit) {
         // Display the usage
-        printf("\n*******************************************\n");
-        printf("Commands:\n"
-        "Quit         ---quit\n"
-		"reset        ---reset sam\n"        
-        "info         ---read card info\n"                		
-        "SAMid        ---get sam id\n"
-		"ICCid        ---get icc card type and id\n"
-         "*******************************************\n\n");
+        show_menu_help(cli,
+		"reset              ---reset mcu\n"        
+        "ver                ---read mcu firmware version\n"                		
+        "fw [firmware]      ---download firmware to mcu\n");
 
-		//print prompt
-		printf(">");
         // accept the command
         memset(cmd,0,sizeof(cmd));
 		cmdptr = gets(cmd);
@@ -54,10 +143,86 @@ int uart_cli_loop(const char* dev){
 
 		str2argv(cmd);
 		if(_argc) {
-			if(!strncmp(_argv[0],"quit",1)){
-	            printf("Quit...\n");
-	            exit=1;
-	        }else if(!strncmp(_argv[0],"reset",5)){
+			if(!strncmp(_argv[0],"reset",5)){
+				err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_MCU,MCU_SUB_CMD_RESET,2,MCU_RESET_TYPE_NORMAL,0);
+				if(!err&&0x00==buf[0]&&0x00==buf[1]){
+					printf("reset mcu okay\n");
+				}else {
+					printf("reset mcu failed\n");
+				}
+	        }else if(!strncmp(_argv[0],"ver",3)){	
+				printf("read mcu ver via port %s\n",dev);    
+				err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_MCU,MCU_SUB_CMD_FIRMWARE_VERSION,0);
+				if(!err&&0x00==buf[0]&&0x00==buf[1]){
+					printf("mcu version=%2x\n",buf[2]);
+				}else {
+					printf("fetch mcu version failed\n");
+				}
+	        }else if(!strncmp(_argv[0],"fw",2)){
+	        	char* firmware_name = "idr.hex";
+	        	if(_argc>1){
+					firmware_name = _argv[1];
+	        	}
+				printf("download firmware %s to mcu\n",firmware_name);
+				download_firmware_all_in_one(dev,firmware_name);
+	        }else if(!strncmp(_argv[0],"back",1)){
+				printf("back to parent menu...\n");
+				exit=1;
+			}if(!strncmp(_argv[0],"exit",4)||!strncmp(_argv[0],"quit",1)){
+				printf("exit program...\n");
+				platform_program_exit(0);
+			}else{
+	        	char* newmenu = strdup(_argv[0]);
+				argv_dispose();
+	        	exec_menu(cli,newmenu);
+				free(newmenu);
+			}						
+
+				
+       	}
+
+		argv_dispose();
+
+    }
+
+	return 0;
+	
+}
+
+int cli_loop_sam(cli_menu* cli){
+	static char cmd[1024]; 
+	static char buf[2048];
+	int exit=0;
+    int ret;
+	int started = 0;
+	int cmd_len,i;	
+	int err;
+	char* cmdptr;
+	
+	const char* dev = shared.devname;
+    while (!exit) {
+        // Display the usage
+        
+        show_menu_help(cli,
+		"reset               ---reset sam\n"        
+        "info                ---read card info\n"                		
+        "sam                 ---get sam id\n"
+		"icc                 ---get icc card type and id\n"
+         "*******************************************\n\n");
+        // accept the command
+        memset(cmd,0,sizeof(cmd));
+		cmdptr = gets(cmd);
+		cmd_len = strlen(cmd); 
+		if(!cmdptr||!cmd_len) {
+			fflush(0);
+			continue;
+		}
+		for (i=0; i<cmd_len;i++)
+			cmd[i] = tolower(cmd[i]); 
+
+		str2argv(cmd);
+		if(_argc) {
+			if(!strncmp(_argv[0],"reset",5)){				
 	        	err = libid2_open(dev);
 				if(err){
 					printf("open libid2 failed\n");
@@ -93,8 +258,7 @@ int uart_cli_loop(const char* dev){
 
 	        }else if(!strncmp(_argv[0],"samid",3)){
 	        	char buf[128];
-				int samlength;
-		        	
+				int samlength;		        
 				err = libid2_open(dev);
 				if(err){
 					printf("open libid2 failed\n");
@@ -126,7 +290,18 @@ int uart_cli_loop(const char* dev){
 				
 					libid2_close();
 				}
-	        }					
+	        }else if(!strncmp(_argv[0],"back",1)){
+	            printf("back to parent menu...\n");
+	            exit=1;
+	        }if(!strncmp(_argv[0],"exit",4)||!strncmp(_argv[0],"quit",1)){
+	            printf("exit program...\n");
+	            platform_program_exit(0);
+	        }else{
+	        	char* newmenu = strdup(_argv[0]);
+				argv_dispose();
+	        	exec_menu(cli,newmenu);
+				free(newmenu);
+	        }						
 
 				
        	}
@@ -139,16 +314,70 @@ int uart_cli_loop(const char* dev){
 	
 }
 
+
+int cli_loop_main(cli_menu* cli){
+	static char cmd[1024]; 
+	static char buf[2048];
+	int exit=0;
+    int ret;
+	int started = 0;
+	int cmd_len,i;	
+	int err;
+	char* cmdptr;
+    while (!exit) {
+        // Display the usage
+        show_menu_help(cli,NULL);
+        // accept the command
+        memset(cmd,0,sizeof(cmd));
+		cmdptr = gets(cmd);
+		cmd_len = strlen(cmd); 
+		if(!cmdptr||!cmd_len) {
+			fflush(0);
+			continue;
+		}
+		for (i=0; i<cmd_len;i++)
+			cmd[i] = tolower(cmd[i]); 
+
+		str2argv(cmd);
+		if(_argc) {
+			if(!strncmp(_argv[0],"back",1)){
+	            printf("back to parent menu...\n");
+	            exit=1;
+	        }if(!strncmp(_argv[0],"exit",4)||!strncmp(_argv[0],"quit",1)){
+	            printf("exit program...\n");
+	            platform_program_exit(0);
+	        }else{
+	        	char* newmenu = strdup(_argv[0]);
+				argv_dispose();
+	        	exec_menu(cli,newmenu);
+				free(newmenu);
+	        }	
+       	}
+
+		argv_dispose();
+
+    }
+
+	return 0;
+	
+}
+
 static void usage(const char* program){
     fprintf(stderr, 
-        "Usage: %s [-p </dev/ttySx>] [-b <baudrate>] \n"
-		"in win32 ,port name should be COMxx like\n", 
-        program);
+        "Usage: %s [-p </dev/ttySx>] [-b <baudrate>] \n\n"
+        "For linux,port name should be /dev/ttySx\n"
+		"For win32,port name should be COMx\n"
+		"\nFor example:\n"
+		"%s -p /dev/ttyUSB0 \n"
+		"%s -p /dev/ttyUSB0 -b 115200\n"
+		"%s -p COM4 \n"
+		"%s -p COM4 -b 115200\n",		
+        program,program,program,program,program);
     exit(-1);
 }
-int main(int argc, char *argv[]) {
+int main(int argc, char **argv) {
 	int i=0;
-	char* port="/dev/ttyS1";
+	char* port=DEFAULT_PORT;
     int baudrate = 115200;	
 
     while (++i < argc){
@@ -169,6 +398,13 @@ int main(int argc, char *argv[]) {
     }
     
 	printf("Port [%s@%d] will be opened\n",port,baudrate);
+	menu_top.children=menu_top.sibling = NULL;
+	menu_top.func = cli_loop_main;
+	menu_top.menuname = "";
+	shared.devname = port;
+	shared.baudrate = baudrate;
 
-	return uart_cli_loop(port);
+	init_menu(&menu_top,&menu_sam,"sam",cli_loop_sam);
+	init_menu(&menu_top,&menu_mcu,"mcu",cli_loop_mcu);
+	return cli_loop_main(&menu_top);
 }

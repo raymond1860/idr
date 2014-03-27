@@ -4,7 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 
+typedef unsigned char uint8;
+typedef unsigned short uint16;
 
 
 
@@ -23,7 +26,7 @@
 typedef int bool;
 #define false 0
 #define true !false
-
+#define DEFAULT_PORT "COM34"
 #elif defined(__linux__ )
 #include <sys/wait.h>
 #include <sys/stat.h>
@@ -40,18 +43,45 @@ typedef int bool;
 #include <stdbool.h>
 #include <errno.h>
 #include <dlfcn.h>
+#define DEFAULT_PORT "/dev/ttyS1"
 #else
 #error "unknown platform"
 #endif
 
+//platform 
+void 
+	platform_program_exit(int code);
+void 
+	platform_usleep(int usec);
+//return file size	
+long 
+	platform_filesize(const char* filename);
+//return buffer size and buffer hold by platform,user must release buffer by 
+//platform_releasebuffer	
+long 
+	platform_readfile2buffer(const char* filename,char** buffer);
+//release buffer allocated by platform_readfile2buffer	
+void 
+	platform_releasebuffer(char* buffer);
+
+//thread operation
+typedef void* (*platform_threadfunc)(void* arg);
+void* 
+	platform_createthread(platform_threadfunc entry,void* thread_arg);
+int
+	platform_terminatethread(void* threadhandle);
 
 //dynamic library loading
 void* LoadSharedLibrary(const char* path,int flags);
 void ReleaseSharedLibrary(void* handle);
 void* LoadSymbol(void* handle,const char* symbol);
 
+
+
 //utility
 void dump(const char *prefix,const unsigned char *data ,int size);
+
+
 
 /*serial port API*/
 
