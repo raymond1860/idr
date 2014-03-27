@@ -127,8 +127,9 @@ int cli_loop_mcu(cli_menu* cli){
         // Display the usage
         show_menu_help(cli,
 		"reset              ---reset mcu\n"        
-        "ver                ---read mcu firmware version\n"                		
-        "fw [firmware]      ---download firmware to mcu\n");
+        "ver                ---read mcu firmware version\n"  
+        "fw [firmware]      ---download firmware to mcu with manual reset\n"
+        "autofw [firmware]  ---download firmware to mcu with auto reset(mcu feature required)\n");
 
         // accept the command
         memset(cmd,0,sizeof(cmd));
@@ -158,7 +159,15 @@ int cli_loop_mcu(cli_menu* cli){
 				}else {
 					printf("fetch mcu version failed\n");
 				}
-	        }else if(!strncmp(_argv[0],"fw",2)){
+	        }else if(!strncmp(_argv[0],"fw",4)){
+	        	char* firmware_name = "idr.hex";
+	        	if(_argc>1){
+					firmware_name = _argv[1];
+	        	}
+				printf("download firmware %s to mcu\n",firmware_name);
+				err = download_firmware(dev,firmware_name);
+				printf("\n\nresult=%s\n",download_error_code2string(err));
+	        }else if(!strncmp(_argv[0],"autofw",4)){
 	        	char* firmware_name = "idr.hex";
 	        	if(_argc>1){
 					firmware_name = _argv[1];
