@@ -50,7 +50,7 @@ typedef unsigned long DWORD;
 //变量定义
 static BOOL UartReceived;                                      //串口数据接收完成标志位
 static BYTE UartRecvStep;                                      //串口数据接收控制
-static BYTE TimeOut;                                           //串口通讯超时计数器
+static int  TimeOut;                                           //串口通讯超时计数器
 static BYTE TxBuffer[256];                               //串口数据发送缓冲区
 static BYTE RxBuffer[256];                               //串口数据接收缓冲区
 
@@ -60,8 +60,6 @@ static long firmware_size;
 static void* threadhandle_download;
 static void* threadhandle_timer;
 //函数声明
-static void DelayXms(WORD x);
-static BYTE UartSend(BYTE dat);
 static void CommInit(void);
 static void CommSend(BYTE size);
 static BOOL Firmware_Download(BYTE *pdat, long size);
@@ -73,7 +71,7 @@ void* download_timer_thread(void* thread_arg){
 	int exitthread=0;
 	while(!exitthread){
 		platform_usleep(1000*100);
-		if (TimeOut) TimeOut--;		
+		if (TimeOut>0) TimeOut--;		
 	}
 	return NULL;
 }
@@ -144,20 +142,20 @@ void* download_recv_thread(void* thread_arg){
 
 
 //Xms延时程序
-void DelayXms(WORD x)
+static inline void DelayXms(WORD x)
 {
     platform_usleep(x*1000);
 }
 
 //串口数据发送程序
-BYTE UartSend(BYTE dat)
+static inline BYTE UartSend(BYTE dat)
 {
 	serialport_write(handle_download_port,&dat,1);
 	return dat;
 }
 
 //串口通讯初始化
-void CommInit(void)
+static inline void CommInit(void)
 {
     UartRecvStep = 0;
     TimeOut = 20;
@@ -165,7 +163,7 @@ void CommInit(void)
 }
 
 //发送串口通讯数据包
-void CommSend(BYTE size)
+static inline void CommSend(BYTE size)
 {
 	WORD sum;
     BYTE i;
@@ -176,9 +174,10 @@ void CommSend(BYTE size)
     UartSend(0x00);
     sum = size + 6 + 0x6a;
     UartSend(size + 6);
+	serialport_write(handle_download_port,TxBuffer,size);
     for (i=0; i<size; i++)
     {
-        sum += UartSend(TxBuffer[i]);
+        sum += TxBuffer[i];
     }
     UartSend(HIBYTE(sum));
     UartSend(LOBYTE(sum));
@@ -187,14 +186,14 @@ void CommSend(BYTE size)
     CommInit();
 }
 
-void Initial(void)
+static void Initial(void)
 {
 	//串口数据模式必须为8位数据+1位偶检验
 	serialport_config(handle_download_port,MINBAUD,8,1,'e');
 }
 
 //对STC15系列的芯片进行数据下载程序
-int Firmware_Download(BYTE *pdat, long size)
+static int Firmware_Download(BYTE *pdat, long size)
 {
     BYTE arg;
     BYTE cnt;
@@ -204,7 +203,6 @@ int Firmware_Download(BYTE *pdat, long size)
 	
     //握手
     CommInit();
-	TimeOut=50;//to support first handshake 5s or 
     while (1)
     {
         if (UartRecvStep == 0)
@@ -494,7 +492,7 @@ int download_firmware_all_in_one(const char* download_port,const char* firmware_
 	uint8 payload_buffer[16];
 	int payload_len,packet_len;
 	int ret;
-	uint8 reset_delay=1;
+	uint8 reset_delay=2;
 	mcu_xfer xfer;
 
 	payload_len=setup_vendor_payload(payload_buffer,16,CMD_CLASS_MCU,MCU_SUB_CMD_RESET,2/*params num*/,MCU_RESET_TYPE_ISP,reset_delay);

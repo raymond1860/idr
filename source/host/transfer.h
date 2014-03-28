@@ -2,7 +2,7 @@
 #define TRANSFER_H 1
 
 #define MAX_TIMEOUT_MS 10000
-#define DEF_XFER_TIMEOUT_MS 5000
+#define DEF_XFER_TIMEOUT_MS 2000
 
 #define XFER_TYPE_OUT_IN    0x00  /*request and response*/
 #define XFER_TYPE_OUT_ONLY 0x01  /*request only*/

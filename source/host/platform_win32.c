@@ -40,8 +40,8 @@ int serialport_open(const char* name){
 	timeouts.ReadIntervalTimeout=0;
 	timeouts.ReadTotalTimeoutConstant=1;
 	timeouts.ReadTotalTimeoutMultiplier=1;
-	timeouts.WriteTotalTimeoutConstant=1;
-	timeouts.WriteTotalTimeoutMultiplier=1;
+	timeouts.WriteTotalTimeoutConstant=2000;
+	timeouts.WriteTotalTimeoutMultiplier=0;
 
 	if(!SetCommTimeouts((HANDLE)fd, &timeouts)){
  		return -ENOENT;
@@ -202,6 +202,7 @@ void
 }
 //platform usleep
 void platform_usleep(int usec){
+	/*
 	HANDLE timer; 
     LARGE_INTEGER ft; 
 
@@ -210,7 +211,8 @@ void platform_usleep(int usec){
     timer = CreateWaitableTimer(NULL, TRUE, NULL); 
     SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0); 
     WaitForSingleObject(timer, INFINITE); 
-    CloseHandle(timer); 
+    CloseHandle(timer); */
+    usleep(usec);
 }
 
 
