@@ -193,7 +193,7 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 		}break;
 		case CMD_CLASS_CARD: {
 			switch(cmd_buf[1]){
-				case 0x41: {
+				case CARD_SUB_CMD_ACTIVATE_NON_CONTACT_MEMORY_CARD: {
 					/* card cmd: activate non contact card
 					 * FMT: |CLASS[1]|CMD[1]|DELAY[2](0->no wait,0xffff->always wait)|
 					 * ANSWER:|STATUS_CODE[2]|TYPE[1](0x0A->Type A,0x0B Type B)|UID[4]|
@@ -207,11 +207,15 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 					open_prf();	DelayMs(5);
 					do {
 						ret = THM_Anticollision(&comm_buffer[3]);  
-						//assume this operation is about 100ms
-						if(delaytime_ms>10)
+						//assume this operation is about 5ms
+						if(delaytime_ms>10){
 							delaytime_ms-=10;
-						else
+							DelayMs(5);
+						}
+						else {
 							delaytime_ms = 0;
+							DelayMs(5);
+						}
 					}while((0!=ret)&&(1!=ret)&&(delaytime_ms>0));
 
 					//prepare answer payload
@@ -301,7 +305,7 @@ void DbgLeds(uint8 led){
 	#ifdef LED_DBG_BIT8
 	LED_DBG_BIT8=led&0x80?0:1;
 	#endif				 
-	DelayMs(100);
+//	DelayMs(100);
 }
 #endif
 
