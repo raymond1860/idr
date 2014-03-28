@@ -6,6 +6,6 @@ enum {
 	eHex2BinErrRecordUnsupported,
 	eHex2BinErrOutOfBuffer,
 };
-int hex2bin(unsigned char* pInBuffer,unsigned int inlen,unsigned char* pOutBuffer,unsigned int *outlen);
+int mcu_hex2bin(unsigned char* pInBuffer,unsigned int inlen,unsigned char* pOutBuffer,unsigned int *outlen);
 
 #endif

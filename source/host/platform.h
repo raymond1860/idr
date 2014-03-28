@@ -50,7 +50,17 @@ typedef int bool;
 #include <stdbool.h>
 #include <errno.h>
 #include <dlfcn.h>
-#define DEFAULT_PORT "/dev/ttyS1"
+#define DEFAULT_PORT "/dev/ttyUSB0"
+
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+#ifndef TRUE
+#define TRUE !FALSE
+#endif
+
+typedef int BOOL;
 #else
 #error "unknown platform"
 #endif

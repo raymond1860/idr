@@ -207,7 +207,10 @@ void* LoadSymbol(void* handle,const char* symbol){
 	return dlsym(handle,symbol);
 }
 
-
+void 
+	platform_program_exit(int code){
+	exit(0);
+}
 //platform usleep
 void platform_usleep(int usec){
 	usleep(usec);

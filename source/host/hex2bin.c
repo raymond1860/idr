@@ -1,8 +1,8 @@
 #include "platform.h"
 #include "hex2bin.h"
 
-#define MAX_SIZE_HEX_FILE  2048*1024  //字节
-#define ABSOLUTE_ADDR_OFFSET   16 //数据地址偏移 16个字节用于自定义头
+#define MAX_SIZE_HEX_FILE  2048*1024 
+#define ABSOLUTE_ADDR_OFFSET   16 
 
 static unsigned char BCD2Byte(char h, char l)
 {
@@ -47,7 +47,7 @@ static unsigned char BCD2Byte(char h, char l)
 }
 
 //检查 记录结尾的校验码是否正确
-static bool RecordChecksum(unsigned char *p,unsigned int RecordLen)
+static BOOL RecordChecksum(unsigned char *p,unsigned int RecordLen)
 {
 	unsigned int sum =0;
 	unsigned char checksum = 0;
@@ -60,11 +60,11 @@ static bool RecordChecksum(unsigned char *p,unsigned int RecordLen)
 
 	if (checksum == p[RecordLen-1])
 	{
-		return true;
+		return TRUE;
 	}
 	else
 	{
-		return false;
+		return FALSE;
 	}
 
 }
@@ -74,7 +74,7 @@ static int m_bAddHeaderInfo = 0;
 static int m_bUnusefulDataType=0;
 static unsigned int m_uiCustomNo=1;
 static unsigned int m_uiSoftNo = 1;
-int hex2bin(unsigned char* pInBuffer,unsigned int inlen,unsigned char* pOutBuffer,unsigned int *outlen)
+int mcu_hex2bin(unsigned char* pInBuffer,unsigned int inlen,unsigned char* pOutBuffer,unsigned int *outlen)
 {
 	int errcode = eHex2BinSuccess;
 	unsigned long fileLen,ByteIndex;

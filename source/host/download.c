@@ -20,12 +20,11 @@
 #include "download.h"
 #include "hex2bin.h"
 
-#ifdef LOBYTE
 #undef LOBYTE
-#endif
-#ifdef HIBYTE
 #undef HIBYTE
-#endif
+#undef FALSE 
+#undef TRUE
+
 typedef unsigned char BYTE;
 typedef unsigned short WORD;
 typedef unsigned long DWORD;
@@ -279,7 +278,7 @@ static int Firmware_Download(BYTE *pdat, long size)
         }
 	}
 
-	printf("program flash size[0x%x]...\n",size);
+	printf("program flash size[0x%lx]...\n",size);
 
     //Ð´ÓÃ»§´úÂë
     DelayXms(10);
@@ -422,14 +421,14 @@ int download_firmware(const char* download_port,const char* firmware_filename){
 	}
 
 	//allocate out buffer ,max size as half of inlen
-	outlen = inlen/2;
+	outlen = inlen;
 	outbuf = (unsigned char* )malloc(outlen);
 	if(!outbuf){
 		err = eDownloadErrCodeUnknown;
 		goto failed;
 	}
 	//convert to bin format
-	err = hex2bin(inbuf,inlen,outbuf,&outlen);
+	err = mcu_hex2bin(inbuf,inlen,outbuf,&outlen);
 
 	firmware_buffer = outbuf;	
 	firmware_size = outlen;

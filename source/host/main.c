@@ -171,8 +171,9 @@ int cli_loop_mcu(cli_menu* cli){
 					firmware_name = _argv[1];
 	        	}
 				printf("download firmware %s to mcu\n",firmware_name);
-				download_firmware_all_in_one(dev,firmware_name);
-	        }else if(!strncmp(_argv[0],"back",1)){
+				err=download_firmware_all_in_one(dev,firmware_name);
+				printf("\n\nresult = %s\n",download_error_code2string(err));
+	        }else if(!strncmp(_argv[0],"back",1)||!strncmp(_argv[0],"..",2)){
 				printf("back to parent menu...\n");
 				exit=1;
 			}if(!strncmp(_argv[0],"exit",4)||!strncmp(_argv[0],"quit",1)){
@@ -297,7 +298,7 @@ int cli_loop_sam(cli_menu* cli){
 				
 					libid2_close();
 				}
-	        }else if(!strncmp(_argv[0],"back",1)){
+	        }else if(!strncmp(_argv[0],"back",1)||!strncmp(_argv[0],"..",2)){
 	            printf("back to parent menu...\n");
 	            exit=1;
 	        }if(!strncmp(_argv[0],"exit",4)||!strncmp(_argv[0],"quit",1)){
@@ -347,7 +348,7 @@ int cli_loop_main(cli_menu* cli){
 
 		str2argv(cmd);
 		if(_argc) {
-			if(!strncmp(_argv[0],"back",1)){
+			if(!strncmp(_argv[0],"back",1)||!strncmp(_argv[0],"..",2)){
 	            printf("back to parent menu...\n");
 	            exit=1;
 	        }if(!strncmp(_argv[0],"exit",4)||!strncmp(_argv[0],"quit",1)){
