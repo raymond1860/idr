@@ -207,11 +207,16 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 					open_prf();	DelayMs(5);
 					do {
 						ret = THM_Anticollision(&comm_buffer[3]);  
+						//assume this operation is about 100ms
+						if(delaytime_ms>10)
+							delaytime_ms-=10;
+						else
+							delaytime_ms = 0;
 					}while((0!=ret)&&(1!=ret)&&(delaytime_ms>0));
 
 					//prepare answer payload
 					sw = (unsigned short*)&comm_buffer[0];
-					*sw = (!ret)?STATUS_CODE_CARD_NOT_ANSWERED:STATUS_CODE_SUCCESS;
+					*sw = (2==ret)?STATUS_CODE_CARD_NOT_ANSWERED:STATUS_CODE_SUCCESS;
 					comm_buffer[2] = (2==ret)?0x00:0x0A;
 					//setup answer packet now
 					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer,7);
