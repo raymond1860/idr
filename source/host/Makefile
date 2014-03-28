@@ -17,6 +17,7 @@ OBJS = option.o \
 	hex2bin.o \
 	transfer.o \
 	download.o \
+	config.o \
 	main.o
 
 
