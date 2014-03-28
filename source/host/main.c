@@ -3,6 +3,7 @@
 #include "IdentityCard.h"
 #include "download.h"
 #include "packet.h"
+#include "config.h"
 
 struct cli_menu;
 typedef int (*menu_func)(struct cli_menu* cli);
@@ -72,7 +73,7 @@ static void show_menu_help(cli_menu* cli,char* help){
 		"quit               ---exit whole program\n"
 		"exit               ---exit whole program\n");
 	if(cli->parent)
-		printf("back                ---back to parent menu\n");	
+		printf("back or ..         ---back to parent menu\n");	
 	printf("\n*******************************************\n");
 	//show sub menus
 	it = cli;
@@ -370,23 +371,37 @@ int cli_loop_main(cli_menu* cli){
 	
 }
 
-static void usage(const char* program){
+static void usage(const char* program,int exitprogram){
     fprintf(stderr, 
         "Usage: %s [-p </dev/ttySx>] [-b <baudrate>] \n\n"
-        "For linux,port name should be /dev/ttySx\n"
-		"For win32,port name should be COMx\n"
-		"\nFor example:\n"
+        "Specify config in command line\n"
+		"For linux,port name should be /dev/ttySx\n"
+		"For win32,port name should be COMx\n"		
+		"For example:\n"
 		"%s -p /dev/ttyUSB0 \n"
 		"%s -p /dev/ttyUSB0 -b 115200\n"
 		"%s -p COM4 \n"
-		"%s -p COM4 -b 115200\n",		
+		"%s -p COM4 -b 115200\n"
+		"\nSpecify config in config file id2reader.cfg\n"
+		"Example config file:\n"
+		"port=COM4\n"
+		"baudrate=115200\n",		
         program,program,program,program,program);
-    exit(-1);
+    if(exitprogram)
+	    exit(-1);
 }
 int main(int argc, char **argv) {
 	int i=0;
+	char cfgfile_port[MAX_ENTRY_LEN];
+	char cfgfile_baudrate[MAX_ENTRY_LEN];
 	char* port=DEFAULT_PORT;
     int baudrate = 115200;	
+	
+	if(!get_config(0,"port",cfgfile_port))
+		port = cfgfile_port;
+	if(!get_config(0,"baudrate",cfgfile_baudrate)){
+		baudrate = atoi(cfgfile_baudrate);
+	}
 
     while (++i < argc){
         if (!strcmp(argv[i],"-p") || !strcmp(argv[i],"--port")){
@@ -402,10 +417,12 @@ int main(int argc, char **argv) {
         }
         
         fail:
-            usage(argv[0]);
+            usage(argv[0],1);
     }
     
-	printf("Port [%s@%d] will be opened\n",port,baudrate);
+    usage(argv[0],0);
+    printf("-------------------------------------------\n");
+	printf("\n\nPort [%s@%d] will be opened\n",port,baudrate);
 	menu_top.children=menu_top.sibling = NULL;
 	menu_top.func = cli_loop_main;
 	menu_top.menuname = "";
