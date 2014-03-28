@@ -225,15 +225,19 @@ long
 //return buffer size and buffer hold by platform,user must release buffer by 
 //platform_releasebuffer	
 long 
-	platform_readfile2buffer(const char* filename,char** buffer){
+	platform_readfile2buffer(const char* filename,int alignment/*align buffer into size,0 means unused*/,char** buffer){
 	FILE* handle;
 	long ret;
-	char* filebuffer=NULL;
+	char* filebuffer=NULL;	
+	long alignsize;
 	long filesize = platform_filesize(filename);
 	if(filesize<0)
 		return filesize;
-	
-	filebuffer = (char*)malloc(sizeof(char)*filesize);
+	if(alignment)
+		alignsize = alignment_up(filesize,alignment);
+	else
+		alignsize = filesize;
+	filebuffer = (char*)malloc(sizeof(char)*alignsize);
 	if(NULL==filebuffer) 
 		return -ENOMEM;
 	handle = fopen(filename,"rb");
@@ -249,7 +253,7 @@ long
 
 	*buffer = filebuffer;
 	
-	return filesize;
+	return alignsize;
 }
 //release buffer allocated by platform_readfile2buffer	
 void 

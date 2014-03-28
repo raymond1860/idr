@@ -80,7 +80,7 @@ int xfer_packet_wrapper(const char* dev,uint8* resp,int respsize,uint8 cmd,uint8
 	xfer.respsize = respsize;
 	xfer.xfer_impl = 0;
 
-	return submit_xfer(dev,&xfer);	
+	return submit_xfer(dev,NULL,&xfer);	
 	
 failure:
 	return PERR_MEM;	
@@ -119,7 +119,7 @@ int xfer_packet_wrapper_w_xferimpl(const char* dev,xfer_packet_impl xfer_impl,ui
 	xfer.respsize = respsize;
 	xfer.xfer_impl = xfer_impl;
 
-	return submit_xfer(dev,&xfer);	
+	return submit_xfer(dev,NULL,&xfer);	
 	
 failure:
 	return PERR_MEM;	

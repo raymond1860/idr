@@ -28,8 +28,8 @@ Folders=
 IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=3
-CompilerSettings=0000000100000000000000000
-UnitCount=14
+CompilerSettings=0000000100000000001000000
+UnitCount=16
 
 [VersionInfo]
 Major=1
@@ -182,6 +182,26 @@ BuildCmd=
 
 [Unit14]
 FileName=transfer.c
+CompileCpp=0
+Folder=id2reader
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit15]
+FileName=hex2bin.h
+CompileCpp=0
+Folder=id2reader
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit16]
+FileName=hex2bin.c
 CompileCpp=0
 Folder=id2reader
 Compile=1

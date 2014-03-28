@@ -9,7 +9,14 @@
 typedef unsigned char uint8;
 typedef unsigned short uint16;
 
+typedef struct cli_menu_shared{
+	char* devname;
+	int  baudrate;
+}cli_menu_shared;
+extern cli_menu_shared shared;
 
+#define alignment_down(a, size) ((a/size)*size)
+#define alignment_up(a, size) (((a+size-1)/size)*size)
 
 #if defined(_WIN32)
 
@@ -59,7 +66,7 @@ long
 //return buffer size and buffer hold by platform,user must release buffer by 
 //platform_releasebuffer	
 long 
-	platform_readfile2buffer(const char* filename,char** buffer);
+	platform_readfile2buffer(const char* filename,int alignment/*align buffer into size,0 means unused*/,char** buffer);
 //release buffer allocated by platform_readfile2buffer	
 void 
 	platform_releasebuffer(char* buffer);

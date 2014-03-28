@@ -65,6 +65,10 @@
   v1.1->0x11
 */
 
+#define STATUS_CODE(p) ((*(p+3)<<8)+(*(p+4)))
+#define PACKET_RESP(p) (p+5)
+#define STATUS_CODE_SUCCESS 0x0000
+
 //return payload length
 //negative value means failure
 int setup_vendor_payload(uint8* buf,uint16 buf_len,uint8 cmd,uint8 sub_cmd,uint8 params_num, ...);

@@ -14,12 +14,8 @@ typedef struct cli_menu{
 	menu_func func;
 }cli_menu;
 
-typedef struct cli_menu_shared{
-	char* devname;
-	int  baudrate;
-}cli_menu_shared;
 
-static cli_menu_shared shared;
+cli_menu_shared shared;
 
 static cli_menu menu_top;
 static cli_menu menu_sam;
@@ -126,7 +122,7 @@ int cli_loop_mcu(cli_menu* cli){
     while (!exit) {
         // Display the usage
         show_menu_help(cli,
-		"reset              ---reset mcu\n"        
+		"reset [isp]        ---reset mcu normal or into isp mode\n"        
         "ver                ---read mcu firmware version\n"  
         "fw [firmware]      ---download firmware to mcu with manual reset\n"
         "autofw [firmware]  ---download firmware to mcu with auto reset(mcu feature required)\n");
@@ -145,17 +141,19 @@ int cli_loop_mcu(cli_menu* cli){
 		str2argv(cmd);
 		if(_argc) {
 			if(!strncmp(_argv[0],"reset",5)){
-				err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_MCU,MCU_SUB_CMD_RESET,2,MCU_RESET_TYPE_NORMAL,0);
-				if(!err&&0x00==buf[0]&&0x00==buf[1]){
+				uint8 resettype=MCU_RESET_TYPE_NORMAL;
+				if(_argc>1&&!strncmp(_argv[1],"isp",3))
+					resettype=MCU_RESET_TYPE_ISP;
+				err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_MCU,MCU_SUB_CMD_RESET,2,resettype,0);
+				if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
 					printf("reset mcu okay\n");
 				}else {
 					printf("reset mcu failed\n");
 				}
 	        }else if(!strncmp(_argv[0],"ver",3)){	
-				printf("read mcu ver via port %s\n",dev);    
 				err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_MCU,MCU_SUB_CMD_FIRMWARE_VERSION,0);
-				if(!err&&0x00==buf[0]&&0x00==buf[1]){
-					printf("mcu version=%2x\n",buf[2]);
+				if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
+					printf("mcu version=%2x\n",*(PACKET_RESP(buf)));
 				}else {
 					printf("fetch mcu version failed\n");
 				}
