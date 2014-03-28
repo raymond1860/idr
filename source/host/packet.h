@@ -17,6 +17,91 @@
 #define CMD_CLASS_MCU		0x40
 
 
+//CMD_CLASS_CARD sub commands
+#define CARD_SUB_CMD_ACTIVATE_NON_CONTACT 0x24
+/*
+  Command format
+  -----------------------------------------------------------------------
+  |CMD_CLASS_CARD |CARD_SUB_CMD_ACTIVATE_NON_CONTACT | PARAMS          |
+  -----------------------------------------------------------------------
+  | 0x32                     |0x24                                                            | 2bytes            |
+  -----------------------------------------------------------------------
+  params:
+  2byes:delay time(ms) to wait card enter treat area,big endian
+  
+  Response format
+  -----------------------
+  |STATUS Code 	 |ATR    |
+  -----------------------
+  |2bytes               |Variable|
+  -----------------------
+  0x00,0x00 ,Okay  
+*/
+#define CARD_SUB_CMD_DESELECT_NON_CONTACT 0x25
+/*
+  Command format
+  -----------------------------------------------------------------------
+  |CMD_CLASS_CARD |CARD_SUB_CMD_ACTIVATE_NON_CONTACT | PARAMS	      |
+  -----------------------------------------------------------------------
+  | 0x32					 |0x25							  | 2bytes	       |
+  -----------------------------------------------------------------------
+  params:
+  2byes:delay time(ms) to wait card enter treat area,big endian
+  
+  Response format
+  ----------------
+  |STATUS Code	 |
+  ----------------
+  |2bytes			 |
+  ----------------
+  0x00,0x00 ,Okay  
+*/
+#define CARD_SUB_CMD_APP_CMD 0x26
+/*
+  Command format
+  -----------------------------------------------------------------------
+  |CMD_CLASS_CARD |CARD_SUB_CMD_APP_CMD | Card No          |C-APDU          |
+  -----------------------------------------------------------------------
+  | 0x32			     |0x26 					| 1bytes		   |Variable          |
+  -----------------------------------------------------------------------
+  params:
+  Card No: Non contact card:0xff,other is reserved
+  
+  Response format
+  ------------------------- 
+  |STATUS Code	 | R-APDU |
+  -------------------------
+  |2bytes			 |Variable  |
+  -------------------------
+  0x00,0x00 ,Okay  
+*/
+#define CARD_SUB_CMD_ACTIVATE_NON_CONTACT_MEMORY_CARD	 0x41
+/*
+  Command format
+  -------------------------------------------------------------------------------------
+  |CMD_CLASS_CARD |CARD_SUB_CMD_ACTIVATE_NON_CONTACT_MEMORY_CARD | Delay Time     |
+  -------------------------------------------------------------------------------------
+  | 0x32				 |0x41                                                      				| 2bytes		   |
+  -------------------------------------------------------------------------------------
+ params:
+ 2byes:delay time(ms) to wait card enter treat area,big endian
+  
+  Response format
+  ------------------------------------ 
+  |STATUS Code	 | Card Type |  UID      |
+  -----------------------------------
+  |2bytes			 | 1byte        |  4bytes  |
+  -----------------------------------
+  Status Code:0x00,0x00 ,Okay  
+  Card Type: 
+  	0x0A: ISO14443 Type A
+  	0x0B: ISO14443 Type B
+  UID: Card UID
+*/
+
+
+
+
 //CMD_CLASS_MCU sub commands
 #define MCU_SUB_CMD_RESET 0x10
 #define MCU_RESET_TYPE_NORMAL 0x00
