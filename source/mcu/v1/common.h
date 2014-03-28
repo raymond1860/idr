@@ -3,6 +3,8 @@
 
 #define ENABLE_LED_DEBUG
 
+//version is bcd encoding,e.g 0x10 ->v1.0
+#define FIRMWARE_VERSION 0x10
 
 
 typedef unsigned char uint8;

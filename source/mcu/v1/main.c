@@ -10,6 +10,7 @@
 
 //#define IAP_ENABLED
 
+
 #define MAX_BUFSIZE 128
 
 unsigned char xdata comm_buffer[64];	
@@ -121,14 +122,12 @@ void main(void)
 	  //read prf command
 	  //mcu command
 	  if(PPROT_SAM==prot){
-	  	//just write to secure
 		SAM_packet_handler(buf,len);
 	  }else if(PPROT_PRIV==prot){
 	  	PRIVATE_packet_handler(buf,len);
 	  }else {
 	  	//just drop ???		
 	  }
-	  DbgLeds(0x04);
   	}  	 
 }
 
@@ -136,13 +135,11 @@ void main(void)
 void SAM_packet_handler(uint8* buf,int size){
 	unsigned char len,totallen;
 	unsigned char i;
-	DbgLeds(0x02);
 	uart2_write(buf,size);
 	//reuse buf;
 	len= read_sec(buf); 	 			//读加密模块 	
 	if (len!=0)
 	{
-		DbgLeds(0x07);
 		if (buf[0]==0x05)
 		{
 			close_prf();				 //关闭射频
@@ -159,37 +156,34 @@ void SAM_packet_handler(uint8* buf,int size){
 	  		len =len+1;
 			    
 	        write_sec(buf,len);			 //写加密模块
-	}else {
-		DbgLeds(0x03);
 	}
 	//read from uart2 (for SAM return)
 	//and write it to uart1
 	totallen=i=0;
 	do {
 		DelayMs(100);//fine tune?
-		DbgLeds(0x08);	
     	len = uart2_read(buf,MAX_BUFSIZE);
 		#ifndef IAP_ENABLED
 		if(len>0){
-			DbgLeds(0x09);
 			uart1_write(buf,len);
 			totallen+=len;
-		}else {
-			DbgLeds(0xA);
 		}
 		#endif
 		i++;
 		
 	}while(!totallen&&i<10);
 
-	DbgLeds(0x04);
 
 }
 
 void PRIVATE_packet_handler(uint8* buf,int size){
 	uint8* cmd_buf = buf+3;	//just skip prefix
+	uint16 plen;
+	uint16 delaytime_ms;
+	uint16 *sw;
 	uint8 ret;
-	if(size){}
+	if(size<5) return;
+	DbgLeds(0x08);
 	switch(cmd_buf[0]){
 		case CMD_CLASS_COMM:{
 			//FIXME
@@ -203,10 +197,9 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 					/* card cmd: activate non contact card
 					 * FMT: |CLASS[1]|CMD[1]|DELAY[2](0->no wait,0xffff->always wait)|
 					 * ANSWER:|STATUS_CODE[2]|TYPE[1](0x0A->Type A,0x0B Type B)|UID[4]|
-					*/
-					int plen;
-					uint16 delaytime_ms = (cmd_buf[2]<<8)+cmd_buf[3]; 
-					uint16 *sw;
+					*/					
+					delaytime_ms = (cmd_buf[2]<<8)+cmd_buf[3]; 
+					
 					//step down delay time to meet host requirement
 					if(delaytime_ms!=0xffff) delaytime_ms--;
 					//generall uid_len is 4
@@ -230,6 +223,48 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 		}break;
 		case CMD_CLASS_EXT: {
 			//FIXME
+		}break;
+		case CMD_CLASS_MCU:{
+			 switch(cmd_buf[1]){
+			 	case MCU_SUB_CMD_RESET:{
+					uint8 xdata resettype;
+					uint8 xdata delay_s;
+					//first param is reset type,
+					resettype = cmd_buf[2];
+					//second param is delay time to execute reset
+					delay_s = cmd_buf[3];
+					sw = (unsigned short*)&comm_buffer[0];
+					*sw = STATUS_CODE_SUCCESS;
+					//setup answer packet now
+					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer,2);
+					//send answer packet
+					uart1_write(buf,plen);
+					//delay specified time to execute reset 
+					while(delay_s--)
+						DelayMs(1000);
+					if(MCU_RESET_TYPE_ISP==resettype)
+						IAP_CONTR = 0x60; //软件复位,系统重新从ISP代码区开始运行程序
+					else
+						IAP_CONTR = 0x20;//软件复位,系统重新从用户代码区开始运行程序
+
+					//infinite loop to waiting for reset 
+					while(1){
+						DbgLeds(0x00);
+						DelayMs(100);
+						DbgLeds(0xff);
+					} 
+						
+				}break;	
+				case MCU_SUB_CMD_FIRMWARE_VERSION:{
+					sw = (unsigned short*)&comm_buffer[0];
+					*sw = STATUS_CODE_SUCCESS;
+					comm_buffer[2] = FIRMWARE_VERSION;
+					//setup answer packet now
+					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer,3);
+					//send answer packet
+					uart1_write(buf,plen);
+				}break;
+			 }
 		}break;
 
 	}
@@ -261,7 +296,7 @@ void DbgLeds(uint8 led){
 	#ifdef LED_DBG_BIT8
 	LED_DBG_BIT8=led&0x80?0:1;
 	#endif				 
-//	DelayMs(50);
+	DelayMs(100);
 }
 #endif
 
