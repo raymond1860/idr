@@ -437,7 +437,7 @@ int download_firmware(const char* download_port,const char* firmware_filename){
 //	firmware_buffer = DEMO;
 //	firmware_size=256;
 	//now firmware buffer is ready;
-	printf("firmware[%s] hex size[0x%ux] bin size[0x%ux] prepareokay!\n",firmware_filename,
+	printf("firmware[%s] hex size[0x%x] bin size[0x%x] prepareokay!\n",firmware_filename,
 		inlen,outlen);
 
         
