@@ -1,3 +1,6 @@
+/*
+ *All Rights Reserved 2014, XingHuo Info Inc,.
+*/
 #include <string.h>
 #include "common.h"
 #include "packet.h"

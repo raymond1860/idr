@@ -1,3 +1,6 @@
+/*
+ *All Rights Reserved 2014, XingHuo Info Inc,.
+*/
 #include <stdio.h>
 #include "spi.h"
 #include "thm3060.h"

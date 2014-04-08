@@ -23,6 +23,70 @@ int packet_protocol(unsigned char* buf,unsigned int len);
 #define CMD_CLASS_EXT		0x33
 #define CMD_CLASS_MCU		0x40
 
+//CMD_CLASS_READER sub commands
+#define READER_SUB_CMD_INFOMATION	0x70
+#define RF_ADAPTER_ID_UNKNOWN 0x00
+#define RF_ADAPTER_ID_THM3060 0x01
+/*
+  Command format
+  ----------------------------------------------
+  |CMD_CLASS_READER |READER_SUB_CMD_INFOMATION | 
+  ----------------------------------------------
+  | 0x31            |0x70		               |
+  ----------------------------------------------
+  
+  Response format
+  -------------------------------
+  |STATUS Code 	 |RF adapter id |
+  -------------------------------
+  |2bytes       |1bytes         |
+  -------------------------------
+  0x00,0x00 ,Okay  
+  Adapter id:
+  0x00,unknown
+  0x01,thm3060
+  0x02,nxp rc501
+*/
+#define READER_SUB_CMD_READ_REG	0x71
+/*
+  Command format
+  ---------------------------------------------------------
+  |CMD_CLASS_READER |READER_SUB_CMD_READ_REG   | Register | 
+  ---------------------------------------------------------
+  | 0x31            		 |0x71                                          |1bytes    |
+  ---------------------------------------------------------
+  Register:
+  big endian register address,for 8bit address ,high bytes is zero
+  
+  Response format
+  --------------------------------
+  |STATUS Code 	 |Register Value |
+  -------------------------------
+  |2bytes       		|1 bytes         |
+  -------------------------------
+  0x00,0x00 ,Okay  
+  register value is big endian,for 8bit value,high bytes is zero.
+*/
+
+#define READER_SUB_CMD_WRITE_REG	0x72
+/*
+  Command format
+  --------------------------------------------------------------------
+  |CMD_CLASS_READER |READER_SUB_CMD_WRITE_REG   | Register | Value   |
+  -------------------------------------------------------------------
+  | 0x31            		 |0x72		        |1bytes    | 1bytes  |
+  ------------------------------------------------------------------
+
+  Response format
+  ----------------
+  |STATUS Code 	 |
+  ---------------
+  |2bytes       |
+  --------------
+  0x00,0x00 ,Okay 
+  Other values write failed
+*/
+
 //CMD_CLASS_CARD sub commands
 #define CARD_SUB_CMD_ACTIVATE_NON_CONTACT 0x24
 /*

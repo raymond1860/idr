@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <string.h>
-#include "STC15F2K08S2.h"
+/*
+ *All Rights Reserved 2014, XingHuo Info Inc,.
+*/
 #include "spi.h"
 #include "secure.h"
 #include "common.h"
@@ -11,7 +11,7 @@
 //#define IAP_ENABLED
 
 
-#define MAX_BUFSIZE 128
+#define MAX_BUFSIZE 160
 
 unsigned char xdata comm_buffer[64];	
 
@@ -30,6 +30,14 @@ void Delay1ms()		//@27MHz
 }
 void DelayMs(int ms){
 	while(ms-->0) Delay1ms();
+}
+void Delay1us()		//@27.000MHz
+{
+	unsigned char i;
+
+	_nop_();
+	i = 4;
+	while (--i);
 }
 /*
  * idr work flow
@@ -62,12 +70,6 @@ void main(void)
 	unsigned char prot;
 	uint8 i=0;
 
-	while(++i<=3){
-	  DbgLeds(0x00);
-	  DelayMs(100);
-	  DbgLeds(0xff);
-	  DelayMs(100);
-	}
 	init_i2c();
 	#ifndef IAP_ENABLED
 	uart1_init();
@@ -76,9 +78,17 @@ void main(void)
     reset_prf();				//SPI 模式芯片复位
     write_reg(TMRL,0x08);    	//设置最大响应时间,单位302us
 
+	while(++i<=3){
+	  DbgLeds(0xff);
+	  DelayMs(100);
+	  DbgLeds(0x00);
+	  DelayMs(100);
+	}
 	
 	while(1)
  	{   
+ 	
+	  DbgLeds(0x00);
 	  #ifndef IAP_ENABLED
 	  //step 1:read uart1 
 	  len = uart1_read(buf,MAX_BUFSIZE);
@@ -88,7 +98,6 @@ void main(void)
 
 	  //step 2:check it's valid command
 	  if(len<=0){
-	     DbgLeds(0x01);
 	  	 DelayMs(100);
 		 continue;
 	  }
@@ -131,31 +140,47 @@ void main(void)
   	}  	 
 }
 
+//See SAM protocol
+static unsigned char SAM_command_filter(uint8* cmd){
+	switch(cmd[7]){
+		case 0x10:
+		case 0x11:
+		case 0x12: return 1;
 
+		//FIXME: when uart baudrate change
+		
+	}
+	return 0;
+}
 void SAM_packet_handler(uint8* buf,int size){
 	unsigned char len,totallen;
 	unsigned char i;
+	unsigned char readsec_pass=SAM_command_filter(buf);
 	uart2_write(buf,size);
-	//reuse buf;
-	len= read_sec(buf); 	 			//读加密模块 	
-	if (len!=0)
-	{
-		if (buf[0]==0x05)
+	//reuse buf;	  
+	DbgLeds(0x01);
+	if(!readsec_pass){
+		len= read_sec(buf); 	 			//读加密模块 	
+		if (len!=0)
 		{
-			close_prf();				 //关闭射频
-			for (i=0;i<255;i++);			    
-			open_prf();					 //打开射频
-			for (i=0;i<255;i++);
-        }
+			DbgLeds(0x0e);
+			if (buf[0]==0x05)
+			{
+				DbgLeds(0x0f);
+				close_prf();				 //关闭射频
+				Delay1ms();//for (i=0;i<255;i++);			    
+				open_prf();					 //打开射频
+				Delay1ms();//for (i=0;i<255;i++);
+	        }
 
-	  	EA =0;
-		write_prf( buf,len);			 //发送数据
-		EA =1;
-		len = read_prf(buf);			 //接收身份证反馈的信息
-            buf[len]=0x00; 				 //在数据后补一位0，作为CRC校验信息
-	  		len =len+1;
-			    
-	        write_sec(buf,len);			 //写加密模块
+		  	EA =0;
+			write_prf( buf,len);			 //发送数据
+			EA =1;
+			len = read_prf(buf);			 //接收身份证反馈的信息
+	        buf[len++]=0x00; 				 //在数据后补一位0，作为CRC校验信息
+				    
+		    write_sec(buf,len);			 //写加密模块
+		}
 	}
 	//read from uart2 (for SAM return)
 	//and write it to uart1
@@ -164,13 +189,12 @@ void SAM_packet_handler(uint8* buf,int size){
 		DelayMs(100);//fine tune?
     	len = uart2_read(buf,MAX_BUFSIZE);
 		#ifndef IAP_ENABLED
-		if(len>0){
+		if(len>0){			
 			uart1_write(buf,len);
 			totallen+=len;
 		}
 		#endif
-		i++;
-		
+		i++;		
 	}while(!totallen&&i<10);
 
 
@@ -183,13 +207,37 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 	uint16 *sw;
 	uint8 ret;
 	if(size<5) return;
-	DbgLeds(0x08);
 	switch(cmd_buf[0]){
 		case CMD_CLASS_COMM:{
 			//FIXME
 		}break;
 		case CMD_CLASS_READER: {
-			//FIXME
+			switch(cmd_buf[1]){
+				case READER_SUB_CMD_INFOMATION:{
+					sw = (unsigned short*)&comm_buffer[0];
+					*sw = STATUS_CODE_SUCCESS;
+					comm_buffer[2] = RF_ADAPTER_ID_THM3060;
+					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer,3);
+					//send answer packet to uart1
+					uart1_write(buf,plen); 
+				}break;
+				case READER_SUB_CMD_READ_REG:{
+					comm_buffer[2]=read_reg(cmd_buf[2]);
+					sw = (unsigned short*)&comm_buffer[0];
+					*sw = STATUS_CODE_SUCCESS;					
+					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer,3);
+					//send answer packet to uart1
+					uart1_write(buf,plen); 					
+				}break;
+				case READER_SUB_CMD_WRITE_REG:{
+					write_reg(cmd_buf[2],cmd_buf[3]);					
+					sw = (unsigned short*)&comm_buffer[0];
+					*sw = STATUS_CODE_SUCCESS;					
+					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer,2);
+					//send answer packet to uart1
+					uart1_write(buf,plen);
+				}break;
+			}
 		}break;
 		case CMD_CLASS_CARD: {
 			switch(cmd_buf[1]){
@@ -261,6 +309,7 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 						DbgLeds(0x00);
 						DelayMs(100);
 						DbgLeds(0xff);
+						DelayMs(100);
 					} 
 						
 				}break;	
@@ -305,7 +354,6 @@ void DbgLeds(uint8 led){
 	#ifdef LED_DBG_BIT8
 	LED_DBG_BIT8=led&0x80?0:1;
 	#endif				 
-//	DelayMs(100);
 }
 #endif
 

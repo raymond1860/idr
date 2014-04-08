@@ -1,4 +1,6 @@
-
+/*
+ *All Rights Reserved 2014, XingHuo Info Inc,.
+*/
 //
 //安全模块数据接收发送程序,采用 I2C 接口模式//
 //本程序仅为示例程序,对有些信号的判断未加超时判断
@@ -37,37 +39,6 @@ void delay_nop()
 
 }
 
-#if 0
-// Receive  Data to Secure Module
-unsigned char  read_sec(unsigned char data * dat)
-{
-	unsigned char temp,i,len;
-	len =0;
-	while (TX_FRAME)
-   {
-		
-		*dat =0; temp =0x01;	  			
-		for (i=0;i<8;i++)
-		{    
-			while(!SCLK); 			
-			if ( SDAT)
-			(*dat)|= temp;								   			
-  			temp <<=1;
-			while(SCLK);
-		}		
-		SDAT =0;
-		while (!SCLK);
-		while (SCLK);
-		SDAT =1; 	
-		dat++;
-		len++;
-   }
-   SDAT =1;
-   SCLK =1;
-   return len;
-}
-#endif
-
 void init_i2c()
 {
 
@@ -75,22 +46,26 @@ void init_i2c()
   SCLK =1;
   SDAT =1;
 }
-unsigned char  read_sec(unsigned char idata * dat)
+unsigned char  read_sec(unsigned char idata* dat)
 {
 	unsigned char temp,len;
+	unsigned char c1,c2;
 	len =0;
-	temp=0;
+	c1=c2=0;
+	EA = 0;
 	// 等待接收数据 because some commands may handled by SAM itself,
 	//we just wait a litte time out here
 	while(TX_FRAME==0) {
-		Delay1ms();
-		if(++temp==100) return 0;
+		Delay1us();
+		if(++c1>=255) c2++;
+		if(c2>=15) goto retn;
 	}
-
 	//once TX_FRAME is high,we should disable interrutp to simulate i2c xfer
-	EA = 0;
+	DbgLeds(0x02);
 
-    while (SCLK);
+    while(SCLK);
+	
+	DbgLeds(0x06);
 	// 开始接收数据,因接收数据较快,所以采用每个bit 顺序接收,未采用循环的方法
 	while (TX_FRAME)
    {
@@ -182,7 +157,7 @@ unsigned char  read_sec(unsigned char idata * dat)
 retn:
    SDAT =1;
    SCLK =1;
-   EA =1;
+   EA =1; 	
    return len;
 }
 

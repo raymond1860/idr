@@ -1,5 +1,8 @@
+/*
+ *All Rights Reserved 2014, XingHuo Info Inc,.
+*/
 #include "common.h"
-#include "STC15F2K08S2.h"
+
 
 #define INC_PTR(e,max)	\
 	if((++e) >= max) e = 0;		  

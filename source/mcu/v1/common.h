@@ -1,5 +1,9 @@
 #ifndef COMMON_H
 #define COMMON_H 1
+#include <stdio.h>
+#include <string.h>
+#include <intrins.h>
+#include "STC15F2K08S2.h"
 
 #define ENABLE_LED_DEBUG
 
@@ -40,6 +44,7 @@ int uart2_read(char* buf,int max_size);
 
 void Delay1ms();
 void DelayMs(int ms);
+void Delay1us();
 
 #ifdef ENABLE_LED_DEBUG
 //maximum 8bit led debug output
