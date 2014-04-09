@@ -5,7 +5,21 @@
 #include <intrins.h>
 #include "STC15F2K08S2.h"
 
+/*
+ * LED debug mode support valid led stage indicator
+*/
 #define ENABLE_LED_DEBUG
+
+/*
+* IAP enabled mode will disable uart1 
+*/
+//#define IAP_ENABLED
+
+/*
+ * Bypass mode is working as no uart connection between mcu and host
+*/
+//#define ENABLE_BYPASS_MODE
+
 
 //version is bcd encoding,e.g 0x10 ->v1.0
 #define FIRMWARE_VERSION 0x10
