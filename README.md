@@ -6,12 +6,12 @@ All materials are for type A and type B card reader.
 How idr works?
 ===
     * idr work flow
-    *			  HOST(PC-like uart terminal)
-    *             /|\              
-    *              |  	
-    * THM3060<--->MCU<----->SAM
+    *	         HOST(PC-like uart terminal)
+    *                     /|\              
+    *                      |  	
+    * THM3060<---SPI----->MCU<-----UART+I2C------->SAM
     *
-    * THM3060 is RF non contact ISO/IEC14443 A/B ,ISO/IEC15693 card reader
+    * THM3060 is RF adapter which support ISO/IEC14443 A/B ,ISO/IEC15693 
     * SAM is ID2 card security module
     *
     * Interface between THM3060 and MCU is SPI
@@ -23,7 +23,7 @@ How idr works?
     *     UART1 is for HOST&MCU
     *     UART2 is for SAM&MCU
     *
-    
+
 Structure
 ===
     ├─document  -->project documents
