@@ -85,7 +85,8 @@ void main(void)
 
 	while(1)
  	{   
- 	
+
+	  write_reg(PSEL,0x00);//reset default mode to TypeB
 	  #ifndef IAP_ENABLED
 	  //step 1:read uart1 
 	  len = uart1_read(buf,MAX_BUFSIZE);
