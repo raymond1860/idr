@@ -61,11 +61,9 @@ unsigned char  read_sec(unsigned char idata* dat)
 		if(c2>=15) goto retn;
 	}
 	//once TX_FRAME is high,we should disable interrutp to simulate i2c xfer
-	DbgLeds(0x02);
 
     while(SCLK);
 	
-	DbgLeds(0x06);
 	// 开始接收数据,因接收数据较快,所以采用每个bit 顺序接收,未采用循环的方法
 	while (TX_FRAME)
    {

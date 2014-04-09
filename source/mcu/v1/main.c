@@ -8,8 +8,6 @@
 #include "thm3060.h"
 
 
-//#define IAP_ENABLED
-
 
 #define MAX_BUFSIZE 160
 
@@ -61,8 +59,8 @@ void Delay1us()		//@27.000MHz
 */
 
 
+#ifndef ENABLE_BYPASS_MODE
 //main function  
-
 void main(void)
 {
 	unsigned char idata buf[MAX_BUFSIZE];
@@ -84,7 +82,7 @@ void main(void)
 	  DbgLeds(0x00);
 	  DelayMs(100);
 	}
-	
+
 	while(1)
  	{   
  	
@@ -126,10 +124,7 @@ void main(void)
 	  #endif
 
 	  prot = packet_protocol(buf,len);
-	  //step 3:command dispatch
-	  //secure card command 
-	  //read prf command
-	  //mcu command
+	  //step 3:command dispatcher
 	  if(PPROT_SAM==prot){
 		SAM_packet_handler(buf,len);
 	  }else if(PPROT_PRIV==prot){
@@ -141,52 +136,71 @@ void main(void)
 }
 
 //See SAM protocol
+#define SAM_COMMAND_CLASS_SAM 	0x01
+#define SAM_COMMAND_CLASS_ANTI	0x02
+#define SAM_COMMAND_CLASS_CARD 	0x04
+#define SAM_COMMAND_CLASS_COMM 	0x08
+
 static unsigned char SAM_command_filter(uint8* cmd){
 	switch(cmd[7]){
-		case 0x10:
-		case 0x11:
-		case 0x12: return 1;
-
+		case 0x10: case 0x11: case 0x12: {
+			return SAM_COMMAND_CLASS_SAM;
+		}
+		case 0x20: {
+			return SAM_COMMAND_CLASS_ANTI;
+		}
+		//case 0x30: return SAM_COMMAND_CLASS_CARD;
 		//FIXME: when uart baudrate change
-		
+		case 0x60: case 0x61: {
+			return SAM_COMMAND_CLASS_COMM;
+		}
 	}
 	return 0;
 }
+
 void SAM_packet_handler(uint8* buf,int size){
 	unsigned char len,totallen;
 	unsigned char i;
-	unsigned char readsec_pass=SAM_command_filter(buf);
+	unsigned char cmd_filter =SAM_command_filter(buf);
 	uart2_write(buf,size);
 	//reuse buf;	  
 	DbgLeds(0x01);
-	if(!readsec_pass){
-		len= read_sec(buf); 	 			//读加密模块 	
-		if (len!=0)
-		{
-			DbgLeds(0x0e);
-			if (buf[0]==0x05)
-			{
-				DbgLeds(0x0f);
-				close_prf();				 //关闭射频
-				Delay1ms();//for (i=0;i<255;i++);			    
-				open_prf();					 //打开射频
-				Delay1ms();//for (i=0;i<255;i++);
-	        }
+	if(cmd_filter&(SAM_COMMAND_CLASS_ANTI|SAM_COMMAND_CLASS_CARD)){
+read_sec_again:
+			len= read_sec(buf); 	 			//读加密模块 	
+			if (len){
+				DbgLeds(0x03);
+				if (buf[0]==0x05)
+				{
+					
+					close_prf();				 //关闭射频
+					Delay1ms();//for (i=0;i<255;i++);			    
+					open_prf();					 //打开射频
+					Delay1ms();//for (i=0;i<255;i++);
+		        }
 
-		  	EA =0;
-			write_prf( buf,len);			 //发送数据
-			EA =1;
-			len = read_prf(buf);			 //接收身份证反馈的信息
-	        buf[len++]=0x00; 				 //在数据后补一位0，作为CRC校验信息
-				    
-		    write_sec(buf,len);			 //写加密模块
-		}
+			  	EA =0;
+				write_prf( buf,len);			 //发送数据
+				EA =1;
+				len = read_prf(buf);			 //接收身份证反馈的信息
+		        buf[len++]=0x00; 				 //在数据后补一位0，作为CRC校验信息
+					    
+			    write_sec(buf,len);			 //写加密模块
+
+				if(cmd_filter&SAM_COMMAND_CLASS_CARD) goto read_sec_again;
+					
+
+			}else	goto read_sec_completed;
+			
+			
 	}
+
+read_sec_completed:	
 	//read from uart2 (for SAM return)
 	//and write it to uart1
 	totallen=i=0;
 	do {
-		DelayMs(100);//fine tune?
+		DelayMs(10);//fine tune?
     	len = uart2_read(buf,MAX_BUFSIZE);
 		#ifndef IAP_ENABLED
 		if(len>0){			
@@ -195,7 +209,7 @@ void SAM_packet_handler(uint8* buf,int size){
 		}
 		#endif
 		i++;		
-	}while(!totallen&&i<10);
+	}while(!totallen||i<10||len);
 
 
 }
@@ -251,8 +265,6 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 					//step down delay time to meet host requirement
 					if(delaytime_ms!=0xffff) delaytime_ms--;
 					//generall uid_len is 4
-					close_prf();DelayMs(5);
-					open_prf();	DelayMs(5);
 					do {
 						ret = THM_Anticollision(&comm_buffer[3]);  
 						//assume this operation is about 5ms
@@ -327,6 +339,72 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 
 	}
 }
+
+#else
+#define __enable_T1()		TR1 =  1
+#define __disable_T1()  	TR1 =  0
+
+#define __enable_UART_interrupt()		ES = 1; __enable_T1()
+#define __disable_UART_interrup()	    ES = 0; __disable_T1()
+
+//initial seril interrupt 
+void initial_serial()
+{
+    SCON  = 0x50;                   	/* SCON: mode 1, 8-bit UART, enable rcvr    */
+    PCON  = 0X80;                       /* SMOD =0, K=1;SMOD =1, K=2;               */
+    PS=1;                               /* COMM HIGH PRIORITY                       */
+    TMOD  = 0x21;                   	/* TMOD: timer 1, mode 2, 8-bit reload      */
+    TH1   =0x8b;//ff;// 0xff;;                    	/* TH1:  reload value for 115200 baud @22.1184MHz */
+    TL1   =0x8b;//ff;//0xff;                    	/* Tl1:  reload value for 115200 baud @22.1184MHz */ 
+    __enable_T1();                  	/* TR1:  timer 1 run */
+	TI = 1;
+
+}
+
+
+void main()
+{
+	unsigned char idata buf[MAX_BUFSIZE];
+	unsigned char len; 	
+	unsigned char i;
+	init_i2c();
+	AUXR = 0x00;	
+	initial_serial();	  
+    reset_prf();				//SPI 模式芯片复位
+    write_reg(TMRL,0x08);    	//设置最大响应时间,单位302us
+	//P14=0;
+
+	while(1)
+ 	{   	
+	  len= read_sec(buf); 	 			//读加密模块
+	  if (len!=0)
+	  {
+
+	
+		if (buf[0]==0x05)
+		{
+		close_prf();				 //关闭射频
+		for (i=0;i<255;i++);			    
+		open_prf();					 //打开射频
+		for (i=0;i<255;i++);
+		}
+
+		EA =0;
+		write_prf( buf,len);			 //发送数据
+		EA =1;
+		len = read_prf(buf);			 //接收身份证反馈的信息
+		buf[len]=0x00; 				 //在数据后补一位0，作为CRC校验信息
+		len =len+1;
+
+		write_sec(buf,len);			 //写加密模块
+		
+	  }
+
+  	}  	 
+}
+
+#endif
+
 
 #ifdef ENABLE_LED_DEBUG
 void DbgLeds(uint8 led){

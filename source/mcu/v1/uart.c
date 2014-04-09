@@ -4,11 +4,14 @@
 #include "common.h"
 
 
+#ifndef ENABLE_BYPASS_MODE
+
 #define INC_PTR(e,max)	\
 	if((++e) >= max) e = 0;		  
 
 
 #define RCV_BUF_SIZE 256
+#define RCV_BUF_SIZE2 1200
 
 #define S2_S0 0x01              //P_SW2.0
 
@@ -67,8 +70,8 @@ int uart1_read(char* buf,int max_size){
 
 
 
-static unsigned char xdata  uart2_read_buf[RCV_BUF_SIZE];
-static unsigned char xdata uart2_read_in,uart2_read_out;
+static unsigned char xdata  uart2_read_buf[RCV_BUF_SIZE2];
+static unsigned short xdata uart2_read_in,uart2_read_out;
 
 #define S2RI 0x01
 #define S2TI 0x02
@@ -95,7 +98,7 @@ static void serial2_interrupt(void) interrupt 8  using 1
 	{
 		S2CON &=~S2RI;        
 		uart2_read_buf[uart2_read_in] = S2BUF;
-		INC_PTR(uart2_read_in,RCV_BUF_SIZE);	
+		INC_PTR(uart2_read_in,RCV_BUF_SIZE2);	
 	}
 }
 
@@ -114,11 +117,13 @@ int uart2_read(char* buf,int max_size){
 	if(uart2_read_in != uart2_read_out) {
 		do {
 			buf[ret++]=uart2_read_buf[uart2_read_out];
-			INC_PTR(uart2_read_out,RCV_BUF_SIZE);			
+			INC_PTR(uart2_read_out,RCV_BUF_SIZE2);			
 		}while((ret<max_size)&&uart2_read_in != uart2_read_out);
 
 	}
 	return ret;
 }
+
+#endif
 
 
