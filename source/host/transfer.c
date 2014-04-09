@@ -14,7 +14,7 @@ int default_xfer_packet(mcu_xfer* xfer){
 	}
 
 	serialport_flush (handle, 0);
-	//dump("xfer req",xfer->req,xfer->reqsize);
+	//dumpdata("xfer req",xfer->req,xfer->reqsize);
 
 	//set port prop 
 	serialport_config(handle,
@@ -58,7 +58,8 @@ int default_xfer_packet(mcu_xfer* xfer){
 		}while(readtotal<5);//5 is packet minimum size
 		
 					
-		//dump("xfer resp",xfer->resp,readtotal);
+		//dumpdata("xfer resp",xfer->resp,readtotal);
+		xfer->respsize = (unsigned int)readtotal;
 	}
 	
 failed:

@@ -5,6 +5,63 @@
 #include "packet.h"
 #include "config.h"
 
+static unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)
+{
+	unsigned long result = 0,value;
+
+	if (*cp == '0') {
+		cp++;
+		if ((*cp == 'x') && isxdigit(cp[1])) {
+			base = 16;
+			cp++;
+		}
+		if (!base) {
+			base = 8;
+		}
+	}
+	if (!base) {
+		base = 10;
+	}
+	while (isxdigit(*cp) && (value = isdigit(*cp) ? *cp-'0' : (islower(*cp)
+	    ? toupper(*cp) : *cp)-'A'+10) < base) {
+		result = result*base + value;
+		cp++;
+	}
+	if (endp)
+		*endp = (char *)cp;
+	return result;
+}
+
+static long simple_strtol(const char *cp,char **endp,unsigned int base)
+{
+	if(*cp=='-')
+		return -simple_strtoul(cp+1,endp,base);
+	return simple_strtoul(cp,endp,base);
+}
+
+static int ustrtoul(const char *cp, char **endp, unsigned int base)
+{
+	unsigned long result = simple_strtoul(cp, endp, base);
+	switch (**endp) {
+	case 'G' :
+		result *= 1024;
+		/* fall through */
+	case 'M':
+		result *= 1024;
+		/* fall through */
+	case 'K':
+	case 'k':
+		result *= 1024;
+		if ((*endp)[1] == 'i') {
+			if ((*endp)[2] == 'B')
+				(*endp) += 3;
+			else
+				(*endp) += 2;
+		}
+	}
+	return result;
+}
+
 struct cli_menu;
 typedef int (*menu_func)(struct cli_menu* cli);
 typedef struct cli_menu{
@@ -21,6 +78,7 @@ cli_menu_shared shared;
 static cli_menu menu_top;
 static cli_menu menu_sam;
 static cli_menu menu_mcu;
+static cli_menu menu_reader;
 
 static void init_menu(cli_menu* parent,cli_menu* menu,char* menuname,menu_func func){
 	cli_menu* it;
@@ -99,15 +157,15 @@ static void show_menu_help(cli_menu* cli,char* help){
 
 static void dump_id2_info(ID2Info* info){
 	printf("=====Dump ID2 info=====\n");
-	dump("name",info->name,30);
-	dump("sex",info->sex,2);
-	dump("native",info->native,4);
-	dump("birthday",info->birthday,16);
-	dump("address",info->address,70);
-	dump("id",info->id,36);
-	dump("authority",info->authority,30);
-	dump("period_start",info->period_start,16);
-	dump("period_end",info->period_end,16);
+	dumpdata("name",info->name,30);
+	dumpdata("sex",info->sex,2);
+	dumpdata("native",info->native,4);
+	dumpdata("birthday",info->birthday,16);
+	dumpdata("address",info->address,70);
+	dumpdata("id",info->id,36);
+	dumpdata("authority",info->authority,30);
+	dumpdata("period_start",info->period_start,16);
+	dumpdata("period_end",info->period_end,16);
 }
 
 int cli_loop_mcu(cli_menu* cli){
@@ -217,6 +275,10 @@ int cli_loop_sam(cli_menu* cli){
         "info                ---read card info\n"                		
         "sam                 ---get sam id\n"
 		"icc                 ---get icc card type and id\n"
+		"fc                  ---find card\n"
+		"sc                  ---select card\n"
+		"rc                  ---read card\n"
+		"cc                  ---combo find+select+read card\n"		
          "*******************************************\n\n");
         // accept the command
         memset(cmd,0,sizeof(cmd));
@@ -240,6 +302,131 @@ int cli_loop_sam(cli_menu* cli){
 					printf("reset sam %s\n",ret<0?"failed":"okay");
 					libid2_close();
 				}
+	        }else if(!strncmp(_argv[0],"fc",2)){
+	        	port_property prop;
+		        mcu_xfer xfer;
+				memset(&prop,0,sizeof(port_property));
+				prop.port_setting.serial.baudrate = shared.baudrate;
+				xfer.xfer_impl = NULL;	
+				xfer.req = "\xAA\xAA\xAA\x96\x69\x00\x03\x20\x01\x22";
+				xfer.xfer_to = DEF_XFER_TIMEOUT_MS;
+				xfer.reqsize = 10;
+				xfer.resp = buf;
+				xfer.respsize = 2048;
+				xfer.xfer_type = XFER_TYPE_OUT_IN;
+				err = submit_xfer(dev,&prop,&xfer);
+				printf("find card result %s\n",!err?"okay":"failure");
+				if(!err&&xfer.respsize){
+					printf("SAM result %s\n",
+						(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS)?"success":
+						(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS2)?"success":"failed");
+					dumpdata("return data",xfer.resp,xfer.respsize);
+				}
+	        	
+	        }else if(!strncmp(_argv[0],"sc",2)){
+	        	port_property prop;
+		        mcu_xfer xfer;
+				memset(&prop,0,sizeof(port_property));
+				prop.port_setting.serial.baudrate = shared.baudrate;
+				xfer.xfer_impl = NULL;		
+				xfer.req = "\xAA\xAA\xAA\x96\x69\x00\x03\x20\x02\x21";				
+				xfer.xfer_to = DEF_XFER_TIMEOUT_MS;
+				xfer.reqsize = 10;
+				xfer.resp = buf;
+				xfer.respsize = 2048;
+				xfer.xfer_type = XFER_TYPE_OUT_IN;
+				err = submit_xfer(dev,&prop,&xfer);
+				printf("select card result %s\n",!err?"okay":"failure");
+				if(!err&&xfer.respsize){					
+					printf("SAM result %s\n",
+						(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS)?"success":
+						(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS2)?"success":"failed");
+					dumpdata("return data",xfer.resp,xfer.respsize);
+				}
+	        	
+	        }else if(!strncmp(_argv[0],"rc",2)){
+	        	port_property prop;
+		        mcu_xfer xfer;
+				memset(&prop,0,sizeof(port_property));
+				prop.port_setting.serial.baudrate = shared.baudrate;
+				xfer.xfer_impl = NULL;			
+				xfer.req = "\xAA\xAA\xAA\x96\x69\x00\x03\x30\x01\x32";				
+				xfer.xfer_to = DEF_XFER_TIMEOUT_MS;
+				xfer.reqsize = 10;
+				xfer.resp = buf;
+				xfer.respsize = 2048;
+				xfer.xfer_type = XFER_TYPE_OUT_IN;
+				err = submit_xfer(dev,&prop,&xfer);
+				printf("read card result %s\n",!err?"okay":"failure");
+				if(!err&&xfer.respsize){					
+					printf("SAM result %s\n",
+						(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS)?"success":
+						(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS2)?"success":"failed");
+					dumpdata("return data",xfer.resp,xfer.respsize);
+				}
+	        	
+	        }else if(!strncmp(_argv[0],"cc",2)){
+	        	port_property prop;
+		        mcu_xfer xfer;
+				memset(&prop,0,sizeof(port_property));
+				prop.port_setting.serial.baudrate = shared.baudrate;
+				xfer.xfer_impl = NULL;	
+				xfer.req = "\xAA\xAA\xAA\x96\x69\x00\x03\x20\x01\x22";
+				xfer.xfer_to = DEF_XFER_TIMEOUT_MS;
+				xfer.reqsize = 10;
+				xfer.resp = buf;
+				xfer.respsize = 2048;
+				xfer.xfer_type = XFER_TYPE_OUT_IN;
+				err = submit_xfer(dev,&prop,&xfer);
+				printf("find card result %s\n",!err?"okay":"failure");
+				if(!err){
+					if(xfer.respsize){						
+						printf("SAM result %s\n",
+							(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS)?"success":
+							(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS2)?"success":"failed");
+						dumpdata("return data",xfer.resp,xfer.respsize);
+					}					
+					memset(&prop,0,sizeof(port_property));
+					prop.port_setting.serial.baudrate = shared.baudrate;
+					xfer.xfer_impl = NULL;		
+					xfer.req = "\xAA\xAA\xAA\x96\x69\x00\x03\x20\x02\x21";				
+					xfer.xfer_to = DEF_XFER_TIMEOUT_MS;
+					xfer.reqsize = 10;
+					xfer.resp = buf;
+					xfer.respsize = 2048;
+					xfer.xfer_type = XFER_TYPE_OUT_IN;
+					err = submit_xfer(dev,&prop,&xfer);
+					printf("select card result %s\n",!err?"okay":"failure");
+					if(!err){						
+						printf("SAM result %s\n",
+							(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS)?"success":
+							(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS2)?"success":"failed");
+						if(xfer.respsize){
+							dumpdata("return data",xfer.resp,xfer.respsize);
+						}
+
+						memset(&prop,0,sizeof(port_property));
+						prop.port_setting.serial.baudrate = shared.baudrate;
+						xfer.xfer_impl = NULL;			
+						xfer.req = "\xAA\xAA\xAA\x96\x69\x00\x03\x30\x01\x32";				
+						xfer.xfer_to = DEF_XFER_TIMEOUT_MS;
+						xfer.reqsize = 10;
+						xfer.resp = buf;
+						xfer.respsize = 2048;
+						xfer.xfer_type = XFER_TYPE_OUT_IN;
+						err = submit_xfer(dev,&prop,&xfer);
+						printf("read card result %s\n",!err?"okay":"failure");
+						if(!err&&xfer.respsize){							
+							printf("SAM result %s\n",
+								(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS)?"success":
+								(STATUS_CODE_SAM(xfer.resp)==STATUS_CODE_SAM_SUCCESS2)?"success":"failed");
+							dumpdata("return data",xfer.resp,xfer.respsize);
+						}
+						
+					}
+					
+				}
+	        	
 	        }else if(!strncmp(_argv[0],"info",4)){	    
 				int retlength;
 				err = libid2_open(dev);
@@ -252,7 +439,7 @@ int cli_loop_sam(cli_menu* cli){
 					}else {
 						ID2Info info;
 						printf("read_id2 return %d\n",retlength);
-						dump("id2info",buf,retlength);
+						dumpdata("id2info",buf,retlength);
 
 						memset(&info,0,sizeof(info));
 						ret = libid2_decode_info(buf,retlength,&info);
@@ -292,7 +479,7 @@ int cli_loop_sam(cli_menu* cli){
 				}else {
 					if(!libid2_getICCard(1000,&icctype,iccid)){
 						printf("icctype %d\n",icctype);					
-						dump("iccid",iccid,4);
+						dumpdata("iccid",iccid,4);
 					}else {
 						printf("get iccid failed\n");
 					}
@@ -311,6 +498,105 @@ int cli_loop_sam(cli_menu* cli){
 	        	exec_menu(cli,newmenu);
 				free(newmenu);
 	        }						
+
+				
+       	}
+
+		argv_dispose();
+
+    }
+
+	return 0;
+	
+}
+
+int cli_loop_reader(cli_menu* cli){
+	static char cmd[1024]; 
+	static char buf[2048];
+	int exit=0;
+    int ret;
+	int started = 0;
+	int cmd_len,i;	
+	int err;
+	char* cmdptr;
+	const char* dev = shared.devname;
+    while (!exit) {
+        // Display the usage
+        show_menu_help(cli,
+		"info                     ---get reader info\n"        
+        "reg [address] [value]    ---read/write register\n");
+
+        // accept the command
+        memset(cmd,0,sizeof(cmd));
+		cmdptr = gets(cmd);
+		cmd_len = strlen(cmd); 
+		if(!cmdptr||!cmd_len) {
+			fflush(0);
+			continue;
+		}
+		for (i=0; i<cmd_len;i++)
+			cmd[i] = tolower(cmd[i]); 
+
+		str2argv(cmd);
+		if(_argc) {
+			if(!strncmp(_argv[0],"info",1)){
+				err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_READER,READER_SUB_CMD_INFOMATION,0);
+				if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
+					printf("reader adapter id:0x%x\n",*(PACKET_RESP(buf)));
+				}else {
+					printf("get reader info failed\n");
+				}			
+	        }else if(!strncmp(_argv[0],"reg",3)){
+	        	char* e;
+	        	unsigned int r,v;
+	        	if(_argc>2){
+					r = ustrtoul(_argv[1],&e,0);
+					v = ustrtoul(_argv[2],&e,0);
+					r&=0xff;
+					v&=0xff;
+					printf("write reg[0x%x]=0x%x\n",r,v);
+					err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_READER,READER_SUB_CMD_WRITE_REG,2,r,v);
+					if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
+						printf("result okay\n");
+					}else {
+						printf("result failed\n");
+					}
+	        	}else if(_argc>1){
+	        		r = ustrtoul(_argv[1],&e,0);
+					r&=0xff;
+					err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_READER,READER_SUB_CMD_READ_REG,1,r);
+					if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
+						v = *(PACKET_RESP(buf));
+						printf("read reg:0x%x=0x%x okay\n",r,v);
+					}else {
+						printf("read reg failed\n");
+					}
+	        	}else {
+	        		int i=1;
+	        		printf("read all register available(THM3060)\n");
+					for(;i<0x12;i++){
+						r = i;
+						err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_READER,READER_SUB_CMD_READ_REG,1,r);
+						if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
+							v = *(PACKET_RESP(buf));
+							printf("0x%2x : 0x%2x \n",r,v);
+						}else {
+							printf("0x%2x : failed\n");
+						}
+					}
+	        	}
+	        }else if(!strncmp(_argv[0],"back",1)||!strncmp(_argv[0],"..",2)){
+				printf("back to parent menu...\n");
+				exit=1;
+			}if(!strncmp(_argv[0],"exit",4)||!strncmp(_argv[0],"quit",1)){
+				printf("exit program...\n");
+				platform_program_exit(0);
+			}else{
+	        	char* newmenu = strdup(_argv[0]);
+				argv_dispose();
+	        	exec_menu(cli,newmenu);
+				free(newmenu);
+			}						
 
 				
        	}
@@ -431,5 +717,7 @@ int main(int argc, char **argv) {
 
 	init_menu(&menu_top,&menu_sam,"sam",cli_loop_sam);
 	init_menu(&menu_top,&menu_mcu,"mcu",cli_loop_mcu);
+	init_menu(&menu_top,&menu_reader,"reader",cli_loop_reader);
+	
 	return cli_loop_main(&menu_top);
 }

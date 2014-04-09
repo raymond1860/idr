@@ -1,6 +1,6 @@
 #include "platform.h"
 
-void dump(const char *prefix,const unsigned char *data ,int size)
+void dumpdata(const char *prefix,const unsigned char *data ,int size)
 {
 #ifndef isprint
 #define isprint(c)	(c>='!'&&c<='~')

@@ -96,7 +96,7 @@ void* LoadSymbol(void* handle,const char* symbol);
 
 
 //utility
-void dump(const char *prefix,const unsigned char *data ,int size);
+void dumpdata(const char *prefix,const unsigned char *data ,int size);
 
 
 
@@ -132,6 +132,9 @@ int serialport_read(int fd, unsigned char* buf,int size,int timeout_ms);
  * 1 -> flush out buffer
  * 2 -> flush in buffer
 */
+#define SERIALPORT_BUFFER_ALL 0
+#define SERIALPORT_BUFFER_IN  1
+#define SERIALPORT_BUFFER_OUT 2
 int serialport_flush(int fd, int type);
 
 #endif

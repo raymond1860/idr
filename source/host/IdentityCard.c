@@ -82,6 +82,26 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int time_out);
 
 
 
+#if (DEBUG)
+static const char* cmd_name(int cmd){
+	static const char* names[]={
+		"RESET SAM",
+		"GET SAMID",
+		"FIND CARD",
+		"SELECT CARD",
+		"READ CARD",
+		"GET ICCARD",
+	};
+	static const char* unknown="UNKNOWN";
+	if(cmd<0)
+		cmd-=cmd;
+	if(cmd>=CMD_MAX_SIZE)
+		return unknown;
+
+	return names[cmd];
+}
+#endif
+
 //OpenComPort(RF_SERIAL_PORT,115200,8,"1",0)==-1?false:true;
 
 int libid2_open(const char *uart_name)
@@ -278,7 +298,7 @@ int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 		{
 			return -1;
 		}
-		serialport_flush (fdport, 2);
+		serialport_flush (fdport, SERIALPORT_BUFFER_OUT);
 		if(cancel_flag ==1)
 		{
 			return -1;
@@ -290,7 +310,7 @@ int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 			usleep(10000);
 			continue;
 		}
-		serialport_flush (fdport, 2);
+		serialport_flush (fdport, SERIALPORT_BUFFER_OUT);
 		if(cancel_flag ==1)
 		{
 			return -1;
@@ -302,7 +322,7 @@ int libid2_read_id2_info(char *id2info,int *id2infolength,int time_out)
 			usleep(10000);
 			continue;
 		}
-		serialport_flush (fdport, 2);
+		serialport_flush (fdport, SERIALPORT_BUFFER_OUT);
 		if(cancel_flag ==1)
 		{
 			return -1;
@@ -357,6 +377,9 @@ static int send_cmd(int cmd_index)
 		return -1;
 	}
 
+	#if (DEBUG)
+	printf("\n\nSend Command [%s]\n",cmd_name(cmd_index));
+	#endif
 	while(1)
 	{
 		writelenth = serialport_write(fdport, cmds_list[cmd_index].cmd, CMD_LENGTH) ;
@@ -446,18 +469,19 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int timeout)
 
 
 	if (check_header(header)) {
-#if (DEBUG)			
-		printf("header error! %x %x %x %x %x\n", 
-				header[0], header[1], header[2], header[3], header[4]);
-#endif
 		return -1;
 	}
+#if (DEBUG)			
+		dumpdata("header",header,RESP_HEADER_LEN);
+#endif
 
 	//printf("header: %x %x\n", header[5], header[6]);
 	data_len =(header[5]<<8) + header[6];
 
 
-	//printf("resp data length = %d\n", data_len);
+	#if (DEBUG)			
+	printf("resp data length = %d\n", data_len);
+	#endif
 
 	if(data_len == 0)
 	{
@@ -468,7 +492,9 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int timeout)
 	if(cmd_index == CMD_READ_CARD && data_len  < (256 + 1024))
 	{
 		//data_len = 256 + 1024;
-		//printf("read card lenth == %d err ! ,cmd_index == %d",data_len,cmd_index);
+		#if (DEBUG)
+		printf("read card lenth == %d err ! ,cmd_index == %d\n",data_len,cmd_index);
+		#endif
 		return -1;
 		
 	}
@@ -542,15 +568,7 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int timeout)
 	if (cmds_list[cmd_index].resp) 
 	{
 #if (DEBUG)	
-		int i = 0;
-		for(i =0;i<data_len;i++)
-		{
-			printf("%2x ", tmp_buf[i]);
-			if(i%6 == 0)
-				printf("\n");
-
-		}
-		printf("cmd_index = %d\n",cmd_index);
+		dumpdata("cmd response",tmp_buf,data_len);
 #endif		
 		if (memcmp(tmp_buf, cmds_list[cmd_index].resp, data_len)) {
 #if (DEBUG)	
@@ -568,18 +586,9 @@ static int cmd_resp(int cmd_index, char *buf, int *len,int timeout)
 		}
 		else 
 		{
-#if (DEBUG)			
-			int i;
-			for(i =0;i<data_len;i++)
-			{
-				printf("%2x ", tmp_buf[i]);
-				if(i%6 == 0)
-					printf("\n");
-
-			}
-			printf("\n");
-
-#endif
+			#if (DEBUG)	
+			dumpdata("cmd_resp buf",tmp_buf,data_len);
+			#endif
 			*len = data_len;
 			memcpy(buf, tmp_buf, data_len);
 
@@ -962,7 +971,7 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 	iSendData[7] = lrc;
 	iSendData[8] = 0x03;
 	
-	//dump("icc req",iSendData,10);
+	//dumpdata("icc req",iSendData,10);
 
 
 	writelenth = serialport_write(fdport, iSendData, 9) ;
@@ -1024,7 +1033,7 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 		return -1 ;
 	}
 
-	//dump("icc resq",recbuf,totallenth);
+	//dumpdata("icc resq",recbuf,totallenth);
 
 	if(recbuf[3] == 0x0 && recbuf[4] == 0x0 && recbuf [totallenth -1] == 0x03)
 	{
