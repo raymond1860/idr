@@ -478,8 +478,9 @@ int cli_loop_sam(cli_menu* cli){
 					printf("open libid2 failed\n");
 				}else {
 					if(!libid2_getICCard(1000,&icctype,iccid)){
-						printf("icctype %d\n",icctype);					
-						dumpdata("iccid",iccid,4);
+						printf("read iccid success\n");
+						printf("icctype:%02x\n",icctype);					
+						printf("iccid:%s\n",iccid);						
 					}else {
 						printf("get iccid failed\n");
 					}
@@ -579,7 +580,7 @@ int cli_loop_reader(cli_menu* cli){
 						err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_READER,READER_SUB_CMD_READ_REG,1,r);
 						if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
 							v = *(PACKET_RESP(buf));
-							printf("0x%2x : 0x%2x \n",r,v);
+							printf("0x%2x : 0x%2x \n",(unsigned char)r,(unsigned char)v);
 						}else {
 							printf("0x%2x : failed\n");
 						}

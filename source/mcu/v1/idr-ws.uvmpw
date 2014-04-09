@@ -15,7 +15,6 @@
 
   <project>
     <PathAndName>.\mcu.uvproj</PathAndName>
-    <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
 </ProjectWorkspace>

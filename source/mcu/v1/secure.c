@@ -48,109 +48,83 @@ void init_i2c()
 }
 unsigned char  read_sec(unsigned char idata* dat)
 {
-	unsigned char temp,len;
-	unsigned char c1,c2;
+	unsigned char idata temp,len;
+	unsigned char idata c1,c2;
 	len =0;
 	c1=c2=0;
 	EA = 0;
 	// 等待接收数据 because some commands may handled by SAM itself,
 	//we just wait a litte time out here
-	while(TX_FRAME==0) {
+	while(TX_FRAME==0){
 		Delay1us();
-		if(++c1>=255) c2++;
-		if(c2>=15) goto retn;
+		if(++c1>=255) {c2++;c1=0;}
+		if(c2>=20) goto retn;
 	}
 	//once TX_FRAME is high,we should disable interrutp to simulate i2c xfer
 
     while(SCLK);
-	
+
 	// 开始接收数据,因接收数据较快,所以采用每个bit 顺序接收,未采用循环的方法
-	while (TX_FRAME)
+	while (1)
    {
 	   	temp =0x00;			
 		{ 			
 			while(!SCLK); 			
 			if ( SDAT)
-				temp = temp | 0x80;
-			while(SCLK)
-			{
-				if (!TX_FRAME) goto retn;
-			}			
-
+				temp |= 0x80;
+			while(SCLK){ if (!TX_FRAME) goto retn;}
 		}
 		{    
 			while(!SCLK); 			
 			if ( SDAT)
-				temp = temp | 0x40;
-			while(SCLK)
-			{
-				if (!TX_FRAME) goto retn;
-			}
+				temp|= 0x40;
+			while(SCLK);
 		}
 		{    
 			while(!SCLK); 			
 			if ( SDAT)
-				temp = temp | 0x20;
-			while(SCLK)
-			{
-				if (!TX_FRAME) goto retn;
-			}
+				temp |= 0x20;
+			while(SCLK);
 		}
 		{    
 			while(!SCLK); 			
 			if ( SDAT)
-				temp = temp | 0x10;
-			while(SCLK)
-			{
-				if (!TX_FRAME) goto retn;
-			}
+				temp |= 0x10;
+			while(SCLK);
 		}	
 		{    
 			while(!SCLK); 			
 			if ( SDAT)
-				temp = temp | 0x08;
-			while(SCLK)
-			{
-				if (!TX_FRAME) goto retn;
-			}
-		}	
-		{    
+				temp |= 0x08;
+			while(SCLK);
+		}
+		{
 			while(!SCLK); 			
 			if ( SDAT)
-				temp = temp | 0x04;
-			while(SCLK)
-			{
-				if (!TX_FRAME) goto retn;
-			}
+				temp |= 0x04;
+			while(SCLK);
 		}			
 	    {    
 			while(!SCLK); 			
 			if ( SDAT)
-				temp = temp | 0x02;
-			while(SCLK)
-			{
-				if (!TX_FRAME) goto retn;
-			}
+				temp |= 0x02;
+			while(SCLK);
 		}	
 		{    
 			while(!SCLK); 			
 			if ( SDAT)
-				temp = temp | 0x01;
-			while(SCLK)
-			{
-				if (!TX_FRAME) goto retn;
-			}
-		}	
-		SDAT =0;
-		while (!SCLK);
-		*dat =temp;
-		while (SCLK)
-		{
-				if (!TX_FRAME) goto retn;
+				temp |= 0x01;
+			while(SCLK);
 		}
-		SDAT =1; 	
-		dat++;
-		len++;
+		{
+			//ninth clock
+			SDAT =0;
+			while (!SCLK);
+			*dat++ =temp;
+			while (SCLK);
+			SDAT =1; 	
+			len++;
+		}
    }
 retn:
    SDAT =1;

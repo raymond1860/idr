@@ -9,7 +9,7 @@
 
 
 
-#define MAX_BUFSIZE 160
+#define MAX_BUFSIZE 120
 
 unsigned char xdata comm_buffer[64];	
 
@@ -86,7 +86,6 @@ void main(void)
 	while(1)
  	{   
  	
-	  DbgLeds(0x00);
 	  #ifndef IAP_ENABLED
 	  //step 1:read uart1 
 	  len = uart1_read(buf,MAX_BUFSIZE);
@@ -99,6 +98,7 @@ void main(void)
 	  	 DelayMs(100);
 		 continue;
 	  }
+	  DbgLeds(0x00);
 	  #else
 	  //just write test command to sam
 
@@ -149,7 +149,7 @@ static unsigned char SAM_command_filter(uint8* cmd){
 		case 0x20: {
 			return SAM_COMMAND_CLASS_ANTI;
 		}
-		//case 0x30: return SAM_COMMAND_CLASS_CARD;
+		case 0x30: return SAM_COMMAND_CLASS_CARD;
 		//FIXME: when uart baudrate change
 		case 0x60: case 0x61: {
 			return SAM_COMMAND_CLASS_COMM;
@@ -162,14 +162,13 @@ void SAM_packet_handler(uint8* buf,int size){
 	unsigned char len,totallen;
 	unsigned char i;
 	unsigned char cmd_filter =SAM_command_filter(buf);
+
 	uart2_write(buf,size);
 	//reuse buf;	  
-	DbgLeds(0x01);
 	if(cmd_filter&(SAM_COMMAND_CLASS_ANTI|SAM_COMMAND_CLASS_CARD)){
 read_sec_again:
 			len= read_sec(buf); 	 			//¶Á¼ÓÃÜÄ£¿é 	
 			if (len){
-				DbgLeds(0x03);
 				if (buf[0]==0x05)
 				{
 					
