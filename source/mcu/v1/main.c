@@ -29,9 +29,9 @@ void Delay1ms()		//@27MHz
 void DelayMs(int ms){
 	while(ms-->0) Delay1ms();
 }
-void Delay1us()		//@27.000MHz
+inline void Delay1us()		//@27.000MHz
 {
-	unsigned char i;
+	unsigned char idata i;
 
 	_nop_();
 	i = 4;

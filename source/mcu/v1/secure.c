@@ -65,7 +65,7 @@ unsigned char  read_sec(unsigned char idata* dat)
     while(SCLK);
 
 	// 开始接收数据,因接收数据较快,所以采用每个bit 顺序接收,未采用循环的方法
-	while (1)
+	while (TX_FRAME)
    {
 	   	temp =0x00;			
 		{ 			
