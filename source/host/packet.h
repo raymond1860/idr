@@ -10,6 +10,7 @@
 //Vendor private definition
 #define VENDOR_PACKET_PREFIX 0x02
 #define VENDOR_PACKET_SUFFIX 0x03
+#define VENDOR_PACKET_HEADER_LEN 0x05
 #define CMD_CLASS_COMM  	0x30
 #define CMD_CLASS_READER	0x31
 #define CMD_CLASS_CARD		0x32
@@ -78,6 +79,24 @@
   --------------
   0x00,0x00 ,Okay 
   Other values write failed
+*/
+#define READER_SUB_CMD_XFER_FRAME	0x73
+/*
+  Command format
+  --------------------------------------------------------------------
+  |CMD_CLASS_READER |READER_SUB_CMD_XFER_FRAME	 | FRAME DATA		  |
+  -------------------------------------------------------------------
+  | 0x31					 |0x73						| variable 				|
+  --------------------------------------------------------------------
+  Frame Data length is variable, actual content length is payload_len-2
+  Response format
+  ---------------------------------
+  |STATUS Code	 | Return Frame Data|
+  ----------------------------------
+  |2bytes				 |Variable				  |
+  ---------------------------------
+  0x00,0x00 ,Okay , return frame data length is payload_len-2
+  Other values means failure
 */
 
 
@@ -215,6 +234,8 @@
 */
 
 #define PACKET_PAYLOAD(p) (p+3)
+#define PACKET_PAYLOAD_LEN(p) ((*(p+1)<<8)+(*(p+2)))
+#define PACKET_STATUS_LEN 2
 #define STATUS_CODE(p) ((*(p+3)<<8)+(*(p+4)))
 #define PACKET_RESP(p) (p+5)
 #define STATUS_CODE_SUCCESS 0x0000
@@ -229,6 +250,7 @@ int setup_vendor_packet(uint8* pbuf,uint16 max_plen,uint8* payload,uint16 payloa
 
 
 int xfer_packet_wrapper(const char* dev,uint8* resp,int respsize,uint8 cmd,uint8 sub_cmd,uint8 params_num, ...);
+int xfer_packet_wrapper2(const char* dev,uint8* resp,int respsize,uint8 cmd,uint8 sub_cmd,uint8* param_buf,uint8 param_len);
 int xfer_packet_wrapper_w_xferimpl(const char* dev,xfer_packet_impl xfer_impl,uint8* resp,int respsize,uint8 cmd,uint8 sub_cmd,uint8 params_num, ...);
 
 

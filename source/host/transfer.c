@@ -1,6 +1,7 @@
 #include "platform.h"
 #include "transfer.h"
 
+#define DEBUG_XFER_PACKET 0
 
 int default_xfer_packet(mcu_xfer* xfer){
 	int err=0;
@@ -14,7 +15,9 @@ int default_xfer_packet(mcu_xfer* xfer){
 	}
 
 	serialport_flush (handle, 0);
-	//dumpdata("xfer req",xfer->req,xfer->reqsize);
+	#if DEBUG_XFER_PACKET
+	dumpdata("--->",xfer->req,xfer->reqsize);
+	#endif
 
 	//set port prop 
 	serialport_config(handle,
@@ -57,8 +60,9 @@ int default_xfer_packet(mcu_xfer* xfer){
 							
 		}while(readtotal<5);//5 is packet minimum size
 		
-					
-		//dumpdata("xfer resp",xfer->resp,readtotal);
+		#if DEBUG_XFER_PACKET			
+		dumpdata("<---",xfer->resp,readtotal);
+		#endif
 		xfer->respsize = (unsigned int)readtotal;
 	}
 	

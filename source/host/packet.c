@@ -85,6 +85,41 @@ int xfer_packet_wrapper(const char* dev,uint8* resp,int respsize,uint8 cmd,uint8
 failure:
 	return PERR_MEM;	
 }
+int xfer_packet_wrapper2(const char* dev,uint8* resp,int respsize,uint8 cmd,uint8 sub_cmd,uint8* param_buf,uint8 param_len){
+	uint8 packetbuf[128];
+	uint8 payloadbuf[64];
+	int packetlen,payloadlen;
+	uint8* buf;
+	int arg_num=0;
+	uint8 param;
+	mcu_xfer xfer;
+	
+	//setup payload
+	buf=payloadbuf;
+	*buf++=cmd;
+	*buf++=sub_cmd;
+	arg_num=param_len;
+	memcpy(buf,param_buf,param_len);
+	payloadlen=2+arg_num; 
+
+	packetlen=setup_vendor_packet(packetbuf,128,payloadbuf,payloadlen);
+
+	xfer.xfer_to = DEF_XFER_TIMEOUT_MS;
+	xfer.req = packetbuf;
+	xfer.reqsize = packetlen;
+	xfer.xfer_type = resp?XFER_TYPE_OUT_IN:XFER_TYPE_OUT_ONLY;
+	xfer.xfer_port = dev;
+	xfer.resp = resp;
+	xfer.respsize = respsize;
+	xfer.xfer_impl = 0;
+
+	return submit_xfer(dev,NULL,&xfer); 
+	
+failure:
+	return PERR_MEM;	
+
+}
+
 int xfer_packet_wrapper_w_xferimpl(const char* dev,xfer_packet_impl xfer_impl,uint8* resp,int respsize,uint8 cmd,uint8 sub_cmd,uint8 params_num, ...){
 	uint8 packetbuf[128];
 	uint8 payloadbuf[64];

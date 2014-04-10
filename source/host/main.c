@@ -5,6 +5,7 @@
 #include "packet.h"
 #include "config.h"
 
+//simple utility
 static unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)
 {
 	unsigned long result = 0,value;
@@ -61,6 +62,53 @@ static int ustrtoul(const char *cp, char **endp, unsigned int base)
 	}
 	return result;
 }
+
+//string to hex
+//translate 050000 ->0x05 0x00 0x00 in hex array
+//return element number
+static unsigned int str2hex(unsigned char *str,unsigned char *hex)
+{
+    unsigned char ctmp, ctmp1,half;
+    unsigned int num=0;
+    do{
+            do{
+                    half = 0;
+                    ctmp = *str;
+                    if(!ctmp) break;
+                    str++;
+            }while((ctmp == 0x20)||(ctmp == 0x2c)||(ctmp == '\t'));
+            if(!ctmp) break;
+            if(ctmp>='a') ctmp = ctmp -'a' + 10;
+	            else if(ctmp>='A') ctmp = ctmp -'A'+ 10;
+	            else ctmp=ctmp-'0';
+            ctmp=ctmp<<4;
+            half = 1;
+            ctmp1 = *str;
+            if(!ctmp1) break;
+            str++;
+            if((ctmp1 == 0x20)||(ctmp1 == 0x2c)||(ctmp1 == '\t'))
+            {
+                    ctmp = ctmp>>4;
+                    ctmp1 = 0;
+            }
+            else if(ctmp1>='a') ctmp1 = ctmp1 - 'a' + 10;
+	            else if(ctmp1>='A') ctmp1 = ctmp1 - 'A' + 10;
+	            else ctmp1 = ctmp1 - '0';
+	            ctmp += ctmp1;
+            *hex = ctmp;
+            hex++;
+            num++;
+     }while(1);
+     if(half)
+     {
+            ctmp = ctmp>>4;
+            *hex = ctmp;
+            num++;
+     }
+     return(num);
+
+}
+
 
 struct cli_menu;
 typedef int (*menu_func)(struct cli_menu* cli);
@@ -525,7 +573,9 @@ int cli_loop_reader(cli_menu* cli){
         // Display the usage
         show_menu_help(cli,
 		"info                     ---get reader info\n"        
-        "reg [address] [value]    ---read/write register\n");
+        "reg [address] [value]    ---read/write register\n"
+        "send <frame data>        ---send frame data to reader,all data is hex bcd encoding\n"
+        "                            e.g send 050000 send 3bytes 0x05 0x00 0x00");
 
         // accept the command
         memset(cmd,0,sizeof(cmd));
@@ -547,7 +597,24 @@ int cli_loop_reader(cli_menu* cli){
 				}else {
 					printf("get reader info failed\n");
 				}			
-	        }else if(!strncmp(_argv[0],"reg",3)){
+	        }else if(!strncmp(_argv[0],"send",1)){
+	        	if(_argc<2){
+					printf("format:\n"
+						   "  send 050000");
+	        	}else {
+	        		unsigned int frame_len=str2hex(_argv[1],buf);
+					dumpdata("frame->",buf,frame_len);					
+					err = xfer_packet_wrapper2(dev,buf,64,CMD_CLASS_READER,READER_SUB_CMD_XFER_FRAME,buf,frame_len);					
+					if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
+						printf("result okay\n");
+						frame_len = PACKET_PAYLOAD_LEN(buf)-PACKET_STATUS_LEN;
+						dumpdata("frame<-",PACKET_RESP(buf),frame_len);						
+					}else {
+						printf("result failed=0x%04x\n",STATUS_CODE(buf));
+					}
+	        	}
+	        	
+	        }else if(!strncmp(_argv[0],"reg",1)){
 	        	char* e;
 	        	unsigned int r,v;
 	        	if(_argc>2){
@@ -555,7 +622,7 @@ int cli_loop_reader(cli_menu* cli){
 					v = ustrtoul(_argv[2],&e,0);
 					r&=0xff;
 					v&=0xff;
-					printf("write reg[0x%x]=0x%x\n",r,v);
+					printf("write reg[0x%02x]=0x%02x\n",r,v);
 					err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_READER,READER_SUB_CMD_WRITE_REG,2,r,v);
 					if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
 						printf("result okay\n");
@@ -568,7 +635,7 @@ int cli_loop_reader(cli_menu* cli){
 					err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_READER,READER_SUB_CMD_READ_REG,1,r);
 					if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
 						v = *(PACKET_RESP(buf));
-						printf("read reg:0x%x=0x%x okay\n",r,v);
+						printf("read reg:0x%02x=0x%02x  okay\n",r,v);
 					}else {
 						printf("read reg failed\n");
 					}
@@ -580,9 +647,9 @@ int cli_loop_reader(cli_menu* cli){
 						err = xfer_packet_wrapper(dev,buf,64,CMD_CLASS_READER,READER_SUB_CMD_READ_REG,1,r);
 						if(!err&&STATUS_CODE(buf)==STATUS_CODE_SUCCESS){
 							v = *(PACKET_RESP(buf));
-							printf("0x%2x : 0x%2x \n",(unsigned char)r,(unsigned char)v);
+							printf("0x%02x:0x%02x \n",(unsigned char)r,(unsigned char)v);
 						}else {
-							printf("0x%2x : failed\n");
+							printf("0x%02x:failed\n");
 						}
 					}
 	        	}
