@@ -86,7 +86,6 @@ void main(void)
 	while(1)
  	{   
 
-	  write_reg(PSEL,0x00);//reset default mode to TypeB
 	  #ifndef IAP_ENABLED
 	  //step 1:read uart1 
 	  len = uart1_read(buf,MAX_BUFSIZE);
@@ -124,15 +123,18 @@ void main(void)
 
 	  #endif
 
+
 	  prot = packet_protocol(buf,len);
 	  //step 3:command dispatcher
-	  if(PPROT_SAM==prot){
+	  if(PPROT_SAM==prot){	  	
 		SAM_packet_handler(buf,len);
 	  }else if(PPROT_PRIV==prot){
 	  	PRIVATE_packet_handler(buf,len);
 	  }else {
 	  	//just drop ???		
 	  }
+
+	  //finalize
   	}  	 
 }
 
@@ -251,6 +253,19 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 					//send answer packet to uart1
 					uart1_write(buf,plen);
 				}break;
+				case READER_SUB_CMD_XFER_FRAME:{
+					plen = buf[1]<<8+buf[2];
+					//assume packet length is checked
+					THM_SendFrame(PACKET_PAYLOAD(buf),plen);
+
+					//now wait for frame 
+					ret=THM_WaitReadFrame(&plen,&comm_buffer[2]);
+					sw = (unsigned short*)&comm_buffer[0];
+					*sw = (!plen)?STATUS_CODE_READER_STATUS_ERROR(ret):STATUS_CODE_SUCCESS;
+					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer,plen+2);
+					//send answer packet to uart1
+					uart1_write(buf,plen); 
+				}break;
 			}
 		}break;
 		case CMD_CLASS_CARD: {
@@ -266,27 +281,40 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 					if(delaytime_ms!=0xffff) delaytime_ms--;
 					//generall uid_len is 4
 					do {
-						ret = THM_Anticollision(&comm_buffer[3]);  
-						//assume this operation is about 5ms
-						if(delaytime_ms>10){
-							delaytime_ms-=10;
-							DelayMs(5);
+						//try TypeA
+						ret = THM_Anticollision(&comm_buffer[3]);
+						if(0==ret) ret=1;
+						else if(2==ret) ret=0;
+						//try TypeB						
+						if(!ret){
+							ret = THM_ISO14443_B(&comm_buffer[3]);
+							if(!ret) 
+								ret=2;
+							else 
+								ret=0;
+						}
+						//assume this operation is about 10ms
+						if(delaytime_ms>100){
+							delaytime_ms-=100;
 						}
 						else {
 							delaytime_ms = 0;
-							DelayMs(5);
 						}
-					}while((0!=ret)&&(1!=ret)&&(delaytime_ms>0));
+					}while(!ret&&(delaytime_ms>0));
 
 					//prepare answer payload
 					sw = (unsigned short*)&comm_buffer[0];
-					*sw = (2==ret)?STATUS_CODE_CARD_NOT_ANSWERED:STATUS_CODE_SUCCESS;
-					comm_buffer[2] = (2==ret)?0x00:0x0A;
+					*sw = (ret)?STATUS_CODE_SUCCESS:STATUS_CODE_CARD_NOT_ANSWERED;
+					comm_buffer[2] = (!ret)?0x00:
+						(1==ret)?0x0A:0xB;
 					//setup answer packet now
 					plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer,7);
 
 					//send answer packet to uart1
 					uart1_write(buf,plen); 
+
+					
+					write_reg(PSEL,0x00);//reset default mode to TypeB		
 				}break;
 			}	
 		}break;

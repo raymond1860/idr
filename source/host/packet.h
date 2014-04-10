@@ -214,6 +214,7 @@
   v1.1->0x11
 */
 
+#define PACKET_PAYLOAD(p) (p+3)
 #define STATUS_CODE(p) ((*(p+3)<<8)+(*(p+4)))
 #define PACKET_RESP(p) (p+5)
 #define STATUS_CODE_SUCCESS 0x0000

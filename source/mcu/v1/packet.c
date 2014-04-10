@@ -36,7 +36,7 @@ int packet_protocol(unsigned char* buf,unsigned int len){
 	if(len<3) return PERR_INVALID;
 	if(0x02==buf[0]){
 	    uint8 payload_len = (buf[1]<<8)+buf[2];
-		if(payload_len!=(len-5)){
+		if(payload_len!=(len-VENDOR_PACKET_HEADER_LEN)){
 		    return PERR_INVALID;
 		}
 		if(buf[4+payload_len]!=0x03)
@@ -60,7 +60,7 @@ int packet_protocol(unsigned char* buf,unsigned int len){
 }
 
 int setup_vendor_packet(uint8* pbuf,uint16 max_plen,uint8* payload,uint16 payload_len){	
-	if(max_plen<(payload_len+5))
+	if(max_plen<(payload_len+VENDOR_PACKET_HEADER_LEN))
 		return PERR_MEM;
 	pbuf[0] = VENDOR_PACKET_PREFIX;
 	pbuf[1] = (payload_len&0xff00)>>8;

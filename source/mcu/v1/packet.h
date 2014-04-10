@@ -15,6 +15,7 @@
 int packet_protocol(unsigned char* buf,unsigned int len);
 
 //Vendor private definition
+#define VENDOR_PACKET_HEADER_LEN 0x05
 #define VENDOR_PACKET_PREFIX 0x02
 #define VENDOR_PACKET_SUFFIX 0x03
 #define CMD_CLASS_COMM  	0x30
@@ -85,6 +86,25 @@ int packet_protocol(unsigned char* buf,unsigned int len);
   --------------
   0x00,0x00 ,Okay 
   Other values write failed
+*/
+
+#define READER_SUB_CMD_XFER_FRAME	0x73
+/*
+  Command format
+  --------------------------------------------------------------------
+  |CMD_CLASS_READER |READER_SUB_CMD_XFER_FRAME   | FRAME DATA         |
+  -------------------------------------------------------------------
+  | 0x31            		 |0x73		                                 | variable                 |
+  --------------------------------------------------------------------
+  Frame Data length is variable, actual content length is payload_len-2
+  Response format
+  ---------------------------------
+  |STATUS Code 	 | Return Frame Data|
+  ----------------------------------
+  |2bytes                |Variable                |
+  ---------------------------------
+  0x00,0x00 ,Okay , return frame data length is payload_len-2
+  Other values means failure
 */
 
 //CMD_CLASS_CARD sub commands
@@ -235,6 +255,14 @@ int packet_protocol(unsigned char* buf,unsigned int len);
 #define STATUS_CODE_CARD_NCC_NOT_ACTIVE			((0x30<<8)+0x04)
 #define STATUS_CODE_CARD_NCC_NOT_ANSWERED		((0x30<<8)+0x06)
 #define STATUS_CODE_CARD_NCC_NOT_VALIDDATA		((0x30<<8)+0x07)
+
+#define STATUS_CODE_READER_STATUS_ERROR(state)	((CMD_CLASS_READER<<8)+state)
+
+
+#define PACKET_PAYLOAD(p) (p+3)
+#define STATUS_CODE(p) ((*(p+3)<<8)+(*(p+4)))
+#define PACKET_RESP(p) (p+5)
+#define STATUS_CODE_SUCCESS 0x0000
 
 int setup_vendor_packet(uint8* pbuf,uint16 max_plen,uint8* payload,uint16 payload_len);
 
