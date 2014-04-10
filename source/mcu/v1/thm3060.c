@@ -3,6 +3,7 @@
 */
 #include <stdio.h>
 #include "spi.h"
+#include "common.h"
 #include "thm3060.h"
 
 // 通过 SPI 总线写 address 寄存器的值
@@ -52,6 +53,86 @@ extern unsigned char THM_ReadReg(unsigned char address)
 									
 
 #if 1
+//Function: Change to THM3060 to TypeB Mode and Anticollision Loop 
+//Parameter: OUT b_uid, card's UID , 4 bytes
+//Return value:   00    OK,a card selected and it is the last card
+//                other value ,error code
+//		     01 ATQB error
+//		     02 AttriB error
+//		     03 GUID error
+unsigned char THM_ISO14443_B(unsigned char * b_uid)
+{
+    unsigned short xdata iLen;
+	unsigned char xdata ret;
+	unsigned char xdata temp[20];
+
+    //Change to B mode
+    THM_WriteReg(PSEL,0x00);
+	THM_WriteReg(SCNTL,0x00);
+	DelayMs(5);
+	THM_WriteReg(SCNTL,0x01);
+	DelayMs(5);
+	
+  
+    //Send REQB  
+	temp[0]= 0x05;//APf
+	temp[1]= 0x00;//AFi
+	temp[2]= 0x00;//param
+    THM_SendFrame(temp,3); 
+    ret = THM_WaitReadFrame(&iLen, temp);
+	if(!iLen||(0x50!=temp[0])){
+		DbgLeds(0x01);
+		return 1;
+	}
+
+
+    Delay1ms();
+	//Send AttriB 	
+	temp[0]= 0x1D;
+	//temp[1]~temp[4] is PUPI
+	temp[5]=0x00;
+	temp[6]=0x08;
+	temp[7]=0x01;
+	temp[8]=0x01;//cid
+    THM_SendFrame(temp,9);     
+    ret = THM_WaitReadFrame(&iLen, temp);
+	if(!iLen)
+		return 2;
+	if(0x01!=temp[0])//cid
+		return 2;
+
+	DbgLeds(0x02);
+
+    Delay1ms();
+
+	//Send GUID	
+	//see details on http://www.amobbs.com/forum.php?mod=viewthread&tid=5548512&highlight=%E8%BA%AB%E4%BB%BD%E8%AF%81
+	temp[0]=0x00;
+	temp[5]=0x36;
+	temp[6]=0x00;
+	temp[7]=0x00;
+	temp[8]=0x08;
+	THM_SendFrame(temp,5);	   
+	ret = THM_WaitReadFrame(&iLen, temp);
+	if(!iLen)
+		return 2;
+	
+	DbgLeds(0x04);
+	if(0x01!=temp[0])//cid
+		return 2;
+
+	if(temp[8]!=0x90||temp[9]!=0x00)
+		return 3;
+
+	//only copy 4 bytes at front?
+	*b_uid++ = temp[0];
+	*b_uid++ = temp[1];	
+	*b_uid++ = temp[2];	
+	*b_uid++ = temp[3];		
+
+	return 0;
+    
+}    
 //Function: Change to THM3060 to TypeA Mode and Anticollision Loop 
 //Parameter: OUT b_uid, card's UID , 4 bytes
 //Return value:   00    OK,a card selected and it is the last card
@@ -69,7 +150,10 @@ unsigned char THM_Anticollision(unsigned char * b_uid)
 
     //Change to A mode
     THM_WriteReg(PSEL,0x10);
-    THM_WriteReg(SCNTL, 0x01);      
+	THM_WriteReg(SCNTL,0x00);
+	DelayMs(5);
+	THM_WriteReg(SCNTL,0x01);
+	DelayMs(5);
   
     //Send REQA    
     THM_SendFrame(&reqa_t,1);     

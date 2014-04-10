@@ -47,6 +47,8 @@
 
 
     unsigned char THM_Anticollision(unsigned char * b_uid);
+
+    unsigned char THM_ISO14443_B(unsigned char * b_uid);
     unsigned char THM_Anticollision2(unsigned char * anti_flag,unsigned short * uid_len_all,unsigned char * b_uid);
     unsigned char THM_Anti(unsigned char cmm_head , unsigned short * uid_len,unsigned char * b_uid);
 
