@@ -260,6 +260,8 @@ int packet_protocol(unsigned char* buf,unsigned int len);
 
 
 #define PACKET_PAYLOAD(p) (p+3)
+#define PACKET_PAYLOAD_LEN(p) ((*(p+1)<<8)+(*(p+2)))
+#define PACKET_STATUS_LEN 2
 #define STATUS_CODE(p) ((*(p+3)<<8)+(*(p+4)))
 #define PACKET_RESP(p) (p+5)
 #define STATUS_CODE_SUCCESS 0x0000
