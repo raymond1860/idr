@@ -12,6 +12,7 @@ typedef unsigned short uint16;
 typedef struct cli_menu_shared{
 	char* devname;
 	int  baudrate;
+	char* seqcmd;
 }cli_menu_shared;
 extern cli_menu_shared shared;
 

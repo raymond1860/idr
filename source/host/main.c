@@ -203,6 +203,29 @@ static void show_menu_help(cli_menu* cli,char* help){
 	printf("\n\n>");
 }
 
+static char* fetch_seq_cmd(cli_menu_shared * ms){
+	char* p;
+	char* curcmd;
+	if(ms->seqcmd&&*ms->seqcmd!='\0'){
+		curcmd=p=ms->seqcmd;
+		while(*p!='\0'&&*p!=';') p++;
+		if(*p==';') {
+			*p='\0';
+			ms->seqcmd=++p;
+			printf("%s\n",curcmd);
+			return curcmd;
+		}
+		if(*p=='\0'){
+			ms->seqcmd=NULL;			
+			printf("%s\n",curcmd);
+			return curcmd;
+		}
+	}
+
+	return NULL;
+	
+}
+
 static void dump_id2_info(ID2Info* info){
 	printf("=====Dump ID2 info=====\n");
 	dumpdata("name",info->name,30);
@@ -236,11 +259,16 @@ int cli_loop_mcu(cli_menu* cli){
 
         // accept the command
         memset(cmd,0,sizeof(cmd));
-		cmdptr = gets(cmd);
-		cmd_len = strlen(cmd); 
-		if(!cmdptr||!cmd_len) {
-			fflush(0);
-			continue;
+		if(cmdptr=fetch_seq_cmd(&shared)){
+			strcpy(cmd,cmdptr);
+			cmd_len = strlen(cmd);
+		}else {
+			cmdptr = gets(cmd);
+			cmd_len = strlen(cmd); 
+			if(!cmdptr||!cmd_len) {
+				fflush(0);
+				continue;
+			}
 		}
 		for (i=0; i<cmd_len;i++)
 			cmd[i] = tolower(cmd[i]); 
@@ -330,11 +358,16 @@ int cli_loop_sam(cli_menu* cli){
          "*******************************************\n\n");
         // accept the command
         memset(cmd,0,sizeof(cmd));
-		cmdptr = gets(cmd);
-		cmd_len = strlen(cmd); 
-		if(!cmdptr||!cmd_len) {
-			fflush(0);
-			continue;
+		if(cmdptr=fetch_seq_cmd(&shared)){
+			strcpy(cmd,cmdptr);
+			cmd_len = strlen(cmd);
+		}else {
+			cmdptr = gets(cmd);
+			cmd_len = strlen(cmd); 
+			if(!cmdptr||!cmd_len) {
+				fflush(0);
+				continue;
+			}
 		}
 		for (i=0; i<cmd_len;i++)
 			cmd[i] = tolower(cmd[i]); 
@@ -579,11 +612,16 @@ int cli_loop_reader(cli_menu* cli){
 
         // accept the command
         memset(cmd,0,sizeof(cmd));
-		cmdptr = gets(cmd);
-		cmd_len = strlen(cmd); 
-		if(!cmdptr||!cmd_len) {
-			fflush(0);
-			continue;
+		if(cmdptr=fetch_seq_cmd(&shared)){
+			strcpy(cmd,cmdptr);
+			cmd_len = strlen(cmd);
+		}else {
+			cmdptr = gets(cmd);
+			cmd_len = strlen(cmd); 
+			if(!cmdptr||!cmd_len) {
+				fflush(0);
+				continue;
+			}
 		}
 		for (i=0; i<cmd_len;i++)
 			cmd[i] = tolower(cmd[i]); 
@@ -692,11 +730,16 @@ int cli_loop_main(cli_menu* cli){
         show_menu_help(cli,NULL);
         // accept the command
         memset(cmd,0,sizeof(cmd));
-		cmdptr = gets(cmd);
-		cmd_len = strlen(cmd); 
-		if(!cmdptr||!cmd_len) {
-			fflush(0);
-			continue;
+		if(cmdptr=fetch_seq_cmd(&shared)){
+			strcpy(cmd,cmdptr);
+			cmd_len = strlen(cmd);
+		}else {
+			cmdptr = gets(cmd);
+			cmd_len = strlen(cmd); 
+			if(!cmdptr||!cmd_len) {
+				fflush(0);
+				continue;
+			}
 		}
 		for (i=0; i<cmd_len;i++)
 			cmd[i] = tolower(cmd[i]); 
@@ -727,7 +770,7 @@ int cli_loop_main(cli_menu* cli){
 
 static void usage(const char* program,int exitprogram){
     fprintf(stderr, 
-        "Usage: %s [-p </dev/ttySx>] [-b <baudrate>] \n\n"
+        "Usage: %s [-p </dev/ttySx>] [-b <baudrate>] [-c <commands>] \n\n"
         "Specify config in command line\n"
 		"For linux,port name should be /dev/ttySx\n"
 		"For win32,port name should be COMx\n"		
@@ -739,7 +782,8 @@ static void usage(const char* program,int exitprogram){
 		"\nSpecify config in config file id2reader.cfg\n"
 		"Example config file:\n"
 		"port=COM4\n"
-		"baudrate=115200\n",		
+		"baudrate=115200\n"
+		"<commands> is commands sequence to execute,format is \"<cmd1>;<cmd2>\"\n",
         program,program,program,program,program);
     if(exitprogram)
 	    exit(-1);
@@ -749,6 +793,7 @@ int main(int argc, char **argv) {
 	char cfgfile_port[MAX_ENTRY_LEN];
 	char cfgfile_baudrate[MAX_ENTRY_LEN];
 	char* port=DEFAULT_PORT;
+	char cfgile_seqcmds[MAX_ENTRY_LEN]={0};
     int baudrate = 115200;	
 	
 	if(!get_config(0,"port",cfgfile_port))
@@ -756,6 +801,8 @@ int main(int argc, char **argv) {
 	if(!get_config(0,"baudrate",cfgfile_baudrate)){
 		baudrate = atoi(cfgfile_baudrate);
 	}
+	
+	get_config(0,"seqcmd",cfgile_seqcmds);
 
     while (++i < argc){
         if (!strcmp(argv[i],"-p") || !strcmp(argv[i],"--port")){
@@ -768,6 +815,11 @@ int main(int argc, char **argv) {
             if (++i >= argc) goto fail;
             baudrate = atoi(argv[i]);
             continue;
+        }		
+        if (!strcmp(argv[i],"-c") ){
+            if (++i >= argc) goto fail;
+			strcpy(cfgile_seqcmds,argv[i]);
+            continue;
         }
         
         fail:
@@ -777,15 +829,19 @@ int main(int argc, char **argv) {
     usage(argv[0],0);
     printf("-------------------------------------------\n");
 	printf("\n\nPort [%s@%d] will be opened\n",port,baudrate);
+	if(cfgile_seqcmds)
+		printf("Sequence commands:%s\n",cfgile_seqcmds);
+
 	menu_top.children=menu_top.sibling = NULL;
 	menu_top.func = cli_loop_main;
 	menu_top.menuname = "";
 	shared.devname = port;
 	shared.baudrate = baudrate;
+	shared.seqcmd = cfgile_seqcmds;
 
 	init_menu(&menu_top,&menu_sam,"sam",cli_loop_sam);
 	init_menu(&menu_top,&menu_mcu,"mcu",cli_loop_mcu);
-	init_menu(&menu_top,&menu_reader,"reader",cli_loop_reader);
+	init_menu(&menu_top,&menu_reader,"idr",cli_loop_reader);
 	
 	return cli_loop_main(&menu_top);
 }
