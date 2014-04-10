@@ -9,7 +9,7 @@
 
 
 
-#define MAX_BUFSIZE 120
+#define MAX_BUFSIZE 160
 
 unsigned char xdata comm_buffer[64];	
 
@@ -254,9 +254,9 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 					uart1_write(buf,plen);
 				}break;
 				case READER_SUB_CMD_XFER_FRAME:{
-					plen = buf[1]<<8+buf[2];
-					//assume packet length is checked
-					THM_SendFrame(PACKET_PAYLOAD(buf),plen);
+					//skip cmd and sub cmd
+					plen = PACKET_PAYLOAD_LEN(buf)-2;
+					THM_SendFrame(&cmd_buf[2],plen);
 
 					//now wait for frame 
 					ret=THM_WaitReadFrame(&plen,&comm_buffer[2]);
