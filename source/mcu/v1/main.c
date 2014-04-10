@@ -29,7 +29,7 @@ void Delay1ms()		//@27MHz
 void DelayMs(int ms){
 	while(ms-->0) Delay1ms();
 }
-inline void Delay1us()		//@27.000MHz
+void Delay1us()		//@27.000MHz
 {
 	unsigned char idata i;
 
@@ -66,7 +66,6 @@ void main(void)
 	unsigned char idata buf[MAX_BUFSIZE];
 	int len; 	
 	unsigned char prot;
-	uint8 i=0;
 
 	init_i2c();
 	#ifndef IAP_ENABLED
@@ -76,12 +75,21 @@ void main(void)
     reset_prf();				//SPI 模式芯片复位
     write_reg(TMRL,0x08);    	//设置最大响应时间,单位302us
 
-	while(++i<=3){
-	  DbgLeds(0xff);
-	  DelayMs(100);
-	  DbgLeds(0x00);
-	  DelayMs(100);
-	}
+	#ifdef ENABLE_LED_DEBUG
+	DbgLeds(0xff);
+	DelayMs(100);
+	DbgLeds(0x00);
+	DelayMs(100);
+	DbgLeds(0xff);
+	DelayMs(100);
+	DbgLeds(0x00);
+	DelayMs(100);
+	DbgLeds(0xff);
+	DelayMs(100);
+	DbgLeds(0x00);
+	DelayMs(100);
+
+	#endif
 
 	while(1)
  	{   

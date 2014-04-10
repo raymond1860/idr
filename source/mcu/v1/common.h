@@ -8,7 +8,7 @@
 /*
  * LED debug mode support valid led stage indicator
 */
-#define ENABLE_LED_DEBUG
+//#define ENABLE_LED_DEBUG
 
 /*
 * IAP enabled mode will disable uart1 
