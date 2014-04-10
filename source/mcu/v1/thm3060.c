@@ -84,9 +84,6 @@ unsigned char THM_ISO14443_B(unsigned char * b_uid)
 		DbgLeds(0x01);
 		return 1;
 	}
-
-
-    Delay1ms();
 	//Send AttriB 	
 	temp[0]= 0x1D;
 	//temp[1]~temp[4] is PUPI
@@ -101,24 +98,16 @@ unsigned char THM_ISO14443_B(unsigned char * b_uid)
 	if(0x01!=temp[0])//cid
 		return 2;
 
-	DbgLeds(0x02);
-
-    Delay1ms();
-
 	//Send GUID	
 	//see details on http://www.amobbs.com/forum.php?mod=viewthread&tid=5548512&highlight=%E8%BA%AB%E4%BB%BD%E8%AF%81
 	temp[0]=0x00;
-	temp[5]=0x36;
-	temp[6]=0x00;
-	temp[7]=0x00;
-	temp[8]=0x08;
+	temp[1]=0x36;
+	temp[2]=0x00;
+	temp[3]=0x00;
+	temp[4]=0x08;
 	THM_SendFrame(temp,5);	   
 	ret = THM_WaitReadFrame(&iLen, temp);
 	if(!iLen)
-		return 2;
-	
-	DbgLeds(0x04);
-	if(0x01!=temp[0])//cid
 		return 2;
 
 	if(temp[8]!=0x90||temp[9]!=0x00)
