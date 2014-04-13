@@ -829,7 +829,7 @@ int main(int argc, char **argv) {
     usage(argv[0],0);
     printf("-------------------------------------------\n");
 	printf("\n\nPort [%s@%d] will be opened\n",port,baudrate);
-	if(cfgile_seqcmds)
+	if(strlen(cfgile_seqcmds))
 		printf("Sequence commands:%s\n",cfgile_seqcmds);
 
 	menu_top.children=menu_top.sibling = NULL;
