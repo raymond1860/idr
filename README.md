@@ -29,13 +29,15 @@ Structure
     ├─document  -->project documents
     ├─source    -->source code for both host and mcu
     │  ├─host   -->host side card reader program
-    │  └─mcu
-    │      ├─SOURCE -->reference design source
-    │      │  ├─main
-    │      │  ├─secure
-    │      │  └─spi 
-    │      ├─UV2    -->reference design project 
-    │      └─v1     -->new designed mcu project
+    │  ├───mcu
+    │  │   ├─SOURCE -->reference design source
+    │  │   │  ├─main
+    │  │   │  ├─secure
+    │  │   │  └─spi 
+    │  │   ├─UV2    -->reference design project 
+    │  │   └─v1     -->new designed mcu project
+    │  │
+    │  └─script   -->script for field testing
     └─tools    -->tools for debugging and provisioning
 
 
