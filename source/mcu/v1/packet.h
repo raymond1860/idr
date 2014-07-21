@@ -188,7 +188,7 @@ int packet_protocol(unsigned char* buf,unsigned int len);
   	0x0B: ISO14443 Type B
   UID: Card UID
 */
-
+#define CARD_SUB_CMD_ACTIVATE_NON_CONTACT_ID2_CARD	 0x29
 
 
 //CMD_CLASS_MCU sub commands

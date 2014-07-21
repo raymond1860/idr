@@ -928,6 +928,7 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 	int writelenth = 0;
 	int readlenth = 0;
 	int totallenth = 0;
+	int realLenth = 0;
 	
 	char recbuf[256]={0};
 	char lrc;
@@ -1020,6 +1021,7 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 		}
 	}
 
+	realLenth = recbuf[2];
 	lrc = recbuf[3];//the third bit is the ture content
 	pSrc = &recbuf[4];
 	for(i=1;i<totallenth- 5;i++)
@@ -1037,12 +1039,163 @@ int libid2_getICCard(int DelayTime,int * aCardType,char * CardId)
 	#if (DEBUG)
 	dumpdata("icc resq",recbuf,totallenth);
 	#endif
+	if(realLenth == 11)
+	{
+		if(recbuf[3] == 0x0 && recbuf[4] == 0x0 && recbuf [totallenth -1] == 0x03)
+		{
+			*aCardType = recbuf[5];
+			BCD2ASCII((unsigned char*)&recbuf[6],8,(unsigned char*)tempstr );
+	
+			strcpy(CardId,tempstr);
+			return 0;
+		}
+	}
+	else
+	{
+		if(recbuf[3] == 0x0 && recbuf[4] == 0x0 && recbuf [totallenth -1] == 0x03)
+		{
+			*aCardType = recbuf[5];
+			BCD2ASCII((unsigned char*)&recbuf[6],4,(unsigned char*)tempstr );
+	
+			strcpy(CardId,tempstr);
+			return 0;
+		}
+	}
+
+
+	return -1;
+}
+
+int libid2_getID2Number(int DelayTime,int * aCardType,char * CardId)
+{
+	int writelenth = 0;
+	int readlenth = 0;
+	int totallenth = 0;
+	
+	char recbuf[256]={0};
+	char lrc;
+	unsigned char iSendData[256] = {0};
+	int i;
+	char *pSrc;
+	char tempstr[256];
+	
+	struct timeval t_time; 
+	long time_start= 0,time_end =0; //ms
+	cancel_flag = 0;
+
+	if((fdport <=0) || (libid2_get_power_state() != 1))
+	{
+		printf("fdport not open or power is off \n");
+		return -1;
+	}
+	
+	//heard
+	iSendData[0] = 0x02 ;
+	//source length;
+	iSendData[1] = 0x00;
+	iSendData[2] = 0x03 ;
+
+	//command type
+	iSendData[3] = 0x32;
+	iSendData[4] = 0x29 ;
+	iSendData[5] = 0xff;//(char)((DelayTime & 0xff00)>>8);
+	iSendData[6] = 0xe4;//(char)((DelayTime & 0x00ff)); //
+
+	//lrc = iSendData[3];
+	//pSrc = &iSendData[4];
+
+	//for(i=1;i<4;i++)
+	//{
+	//	lrc = lrc^(*pSrc);
+	//	pSrc++;
+	//}
+
+	//iSendData[7] = lrc;
+	iSendData[7] = 0x03;
+	for(i = 0;i<8;i++)
+	{
+		printf("iSendData = %x\n",iSendData[i]);
+	}
+
+
+
+	writelenth = serialport_write(fdport, iSendData, 8) ;
+	
+	if(writelenth != 8)
+	{
+		printf("write failed %d\n",writelenth);
+		return -1;
+	}
+
+
+	gettimeofday(&t_time, NULL); 
+	time_start = ((long)t_time.tv_sec)*1000+(long)t_time.tv_usec/1000; 
+	
+	memset(recbuf,0,256);
+	while(1)
+	{
+		readlenth = serialport_read(fdport, &recbuf[totallenth],256 -totallenth,0) ;
+		if(readlenth >0)
+		{
+			totallenth +=  readlenth;
+			if(recbuf[0] != 2)
+			{
+				printf("recive head is err\n");
+				return -1;
+			}
+			if((recbuf[1] *256 + recbuf[2] + 5) == totallenth)
+			{
+				break;
+			}
+			continue;
+		}
+		
+		gettimeofday(&t_time, NULL); 
+		time_end = ((long)t_time.tv_sec)*1000+(long)t_time.tv_usec/1000; 
+		if(cancel_flag ==1)
+		{
+			return -1;
+		}
+		//printf("readlenth = %d \n",totallenth);
+		if((time_end - time_start) > (DelayTime+1000))
+		{
+			printf("lenth =%d \n ",recbuf[2]);
+			printf("time out \n ");
+			return -1;
+		}
+	}
+
+	lrc = recbuf[3];//the third bit is the ture content
+	pSrc = &recbuf[4];
+	for(i=1;i<totallenth- 5;i++)
+	{
+		lrc = lrc^(*pSrc);
+		pSrc++;
+	}
+
+	if(lrc != *pSrc)
+	{
+		printf("check out si err = %x",lrc);
+		return -1 ;
+	}
+	int j;
+	for (j = 0; j < totallenth; j++)
+	{
+	printf("%2x ", recbuf[j]);
+	if(j%6 == 0)
+		printf("\n");
+	}
+
+	printf("get length  %d\n",totallenth);
 	if(recbuf[3] == 0x0 && recbuf[4] == 0x0 && recbuf [totallenth -1] == 0x03)
 	{
-		*aCardType = recbuf[5];
-		BCD2ASCII((unsigned char*)&recbuf[6],4,(unsigned char*)tempstr );
+		//*aCardType = recbuf[5];
+		BCD2ASCII((unsigned char*)&recbuf[5],8,(unsigned char*)tempstr );
+		//printf("get length type %d\n",*aCardType);
 
+ 		//memcpy(CardId,&recbuf[5],32);
 		strcpy(CardId,tempstr);
+		printf("%s ", CardId);
 		return 0;
 	}
 

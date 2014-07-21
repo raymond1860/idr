@@ -66,6 +66,7 @@ unsigned char THM_ISO14443_B(unsigned char * b_uid)
 	unsigned char xdata ret;
 	unsigned char xdata temp[20];
 
+
     //Change to B mode
     THM_WriteReg(PSEL,0x00);
 	THM_WriteReg(SCNTL,0x00);
@@ -117,7 +118,15 @@ unsigned char THM_ISO14443_B(unsigned char * b_uid)
 	*b_uid++ = temp[0];
 	*b_uid++ = temp[1];	
 	*b_uid++ = temp[2];	
-	*b_uid++ = temp[3];		
+	*b_uid++ = temp[3];
+
+	*b_uid++ = temp[4];
+	*b_uid++ = temp[5];	
+	*b_uid++ = temp[6];	
+	*b_uid++ = temp[7];
+	*b_uid++ = temp[8];	
+	*b_uid++ = temp[9];	
+
 
 	return 0;
     

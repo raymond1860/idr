@@ -88,7 +88,7 @@ int libid2_decode_image(char *decodebuf);
 
 int libid2_getICCard(int DelayTime,int * aCardType,char* CardId);
 
-
+int libid2_getID2Number(int DelayTime,int * aCardType,char * CardId);
 #ifdef __cplusplus
 }
 #endif

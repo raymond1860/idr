@@ -351,6 +351,7 @@ int cli_loop_sam(cli_menu* cli){
         "info                ---read card info\n"                		
         "sam                 ---get sam id\n"
 		"icc                 ---get icc card type and id\n"
+		"idsam               ---get id2 card  id\n"
 		"fc                  ---find card\n"
 		"sc                  ---select card\n"
 		"rc                  ---read card\n"
@@ -548,7 +549,7 @@ int cli_loop_sam(cli_menu* cli){
 				
 					libid2_close();
 				}
-	        }else if(!strncmp(_argv[0],"icc",1)){
+	        }else if(!strncmp(_argv[0],"icc",3)){
 	        	char iccid[128];
 				int samlength;
 				int icctype;
@@ -559,6 +560,26 @@ int cli_loop_sam(cli_menu* cli){
 					printf("open libid2 failed\n");
 				}else {
 					if(!libid2_getICCard(1000,&icctype,iccid)){
+						printf("read iccid success\n");
+						printf("icctype:%02x\n",icctype);					
+						printf("iccid:%s\n",iccid);						
+					}else {
+						printf("get iccid failed\n");
+					}
+				
+					libid2_close();
+				}
+	        }else if(!strncmp(_argv[0],"idsam",4)){
+	        	char iccid[128];
+				int samlength;
+				int icctype;
+	        	//m_getsamid(ctx);
+	        	
+				err = libid2_open(dev);
+				if(err){
+					printf("open libid2 failed\n");
+				}else {
+					if(!libid2_getID2Number(1000,&icctype,iccid)){
 						printf("read iccid success\n");
 						printf("icctype:%02x\n",icctype);					
 						printf("iccid:%s\n",iccid);						

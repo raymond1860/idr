@@ -278,6 +278,47 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 		}break;
 		case CMD_CLASS_CARD: {
 			switch(cmd_buf[1]){
+				case CARD_SUB_CMD_ACTIVATE_NON_CONTACT_ID2_CARD:{
+									/* card cmd: activate non contact card
+					 * FMT: |CLASS[1]|CMD[1]|DELAY[2](0->no wait,0xffff->always wait)|
+					 * ANSWER:|STATUS_CODE[2]|TYPE[1](0x0A->Type A,0x0B Type B)|UID[4]|
+					*/
+					//if(cmd_buf[2] == 0xff)
+					{
+						delaytime_ms = (0xe8<<8)+0x98; 	
+						//step down delay time to meet host requirement
+						if(delaytime_ms!=0xffff) delaytime_ms--;
+						//generall uid_len is 4
+						do {
+							ret = THM_ISO14443_B(&comm_buffer[2]);
+							if(!ret) 
+								ret=2;
+							else 
+								ret=0;
+							
+							//assume this operation is about 10ms
+							if(delaytime_ms>100){
+								delaytime_ms-=100;
+							}
+							else {
+								delaytime_ms = 0;
+							}
+						}while(!ret&&(delaytime_ms>0));
+	
+						//prepare answer payload
+						sw = (unsigned short*)&comm_buffer[0];
+						*sw = (ret)?STATUS_CODE_SUCCESS:STATUS_CODE_CARD_NOT_ANSWERED;
+
+						plen = setup_vendor_packet(buf,MAX_BUFSIZE,comm_buffer,12);
+					
+						//send answer packet to uart1
+						uart1_write(buf,plen); 
+	
+						
+						write_reg(PSEL,0x00);//reset default mode to TypeB
+					}					
+				}
+				break;
 				case CARD_SUB_CMD_ACTIVATE_NON_CONTACT_MEMORY_CARD: {
 					/* card cmd: activate non contact card
 					 * FMT: |CLASS[1]|CMD[1]|DELAY[2](0->no wait,0xffff->always wait)|
@@ -294,13 +335,13 @@ void PRIVATE_packet_handler(uint8* buf,int size){
 						if(0==ret) ret=1;
 						else if(2==ret) ret=0;
 						//try TypeB						
-						if(!ret){
-							ret = THM_ISO14443_B(&comm_buffer[3]);
-							if(!ret) 
-								ret=2;
-							else 
-								ret=0;
-						}
+						//if(!ret){
+						//	ret = THM_ISO14443_B(&comm_buffer[3]);
+						//	if(!ret) 
+					//			ret=2;
+					//		else 
+					//			ret=0;
+					//	}
 						//assume this operation is about 10ms
 						if(delaytime_ms>100){
 							delaytime_ms-=100;
