@@ -35,7 +35,7 @@ typedef int bool;
 #define false 0
 #define true !false
 #define DEFAULT_PORT "COM34"
-#elif defined(__linux__ )
+#elif defined(__linux__ )||defined(__CYGWIN__)
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/select.h>
